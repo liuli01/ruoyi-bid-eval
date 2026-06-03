@@ -44,6 +44,7 @@
       <el-table-column label="操作" width="200" align="center" fixed="right">
         <template #default="s">
           <el-button type="text" icon="View" @click="viewOpinions(s.row)">意见</el-button>
+          <el-button type="text" icon="TrendCharts" @click="viewProgress(s.row)">进度</el-button>
           <el-button type="text" icon="Download" @click="handleExport(s.row)">导出</el-button>
         </template>
       </el-table-column>
@@ -104,7 +105,9 @@
 
 <script setup name="EvalReview">
 import { listReview, getReviewOpinions, exportReview } from '@/api/eval/review'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 const reviewList = ref([])
 const opinions = ref([])
 const currentReview = ref(null)
@@ -157,6 +160,10 @@ function handleExport(row) {
     link.click()
     URL.revokeObjectURL(link.href)
   })
+}
+
+function viewProgress(row) {
+  router.push(`/eval/review-progress/${row.reviewId}`)
 }
 
 function handleQuery() {

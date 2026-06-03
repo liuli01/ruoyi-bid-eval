@@ -168,7 +168,8 @@
           <el-table-column label="创建时间" prop="createTime" width="160" />
           <el-table-column label="操作" width="200">
             <template #default="s">
-              <el-button type="text" icon="View" @click="viewReview(s.row)">查看</el-button>
+              <el-button type="text" icon="View" @click="viewReview(s.row)">意见</el-button>
+              <el-button type="text" icon="TrendCharts" @click="viewProgress(s.row)">进度</el-button>
               <el-button type="text" icon="Download" @click="handleExport(s.row)">导出</el-button>
             </template>
           </el-table-column>
@@ -217,8 +218,10 @@
 import { listProject, addProject, delProject, getProject } from '@/api/eval/project'
 import { startReview, getReview, getReviewOpinions, exportReview, getProjectReviews } from '@/api/eval/review'
 import { listMaterials, downloadMaterial as dm } from '@/api/eval/material'
+import { useRouter } from 'vue-router'
 
 const { proxy } = getCurrentInstance()
+const router = useRouter()
 
 const projectList = ref([])
 const reviewHistory = ref([])
@@ -365,6 +368,10 @@ function downloadMaterial(row) {
 
 function getToken() {
   return JSON.parse(localStorage.getItem('user-info') || '{}').token || ''
+}
+
+function viewProgress(row) {
+  router.push(`/eval/review-progress/${row.reviewId}`)
 }
 
 function handleExport(row) {

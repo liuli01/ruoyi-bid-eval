@@ -89,6 +89,20 @@ export const constantRoutes = [
 // 动态路由，基于用户权限动态去加载
 export const dynamicRoutes = [
   {
+    path: '/eval/review-progress',
+    component: Layout,
+    hidden: true,
+    permissions: ['eval:review:query'],
+    children: [
+      {
+        path: ':reviewId(\\d+)',
+        component: () => import('@/views/eval/review/progress'),
+        name: 'ReviewProgress',
+        meta: { title: '评审进度', activeMenu: '/eval/review' }
+      }
+    ]
+  },
+  {
     path: '/system/user-auth',
     component: Layout,
     hidden: true,
