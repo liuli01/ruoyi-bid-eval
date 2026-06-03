@@ -182,6 +182,96 @@ async def check_yiyi(yiyi_id: int, query_db: Annotated[AsyncSession, DBSessionDe
     return ResponseUtil.success(data={'checks': check_result, 'passed': all_pass})
 
 
+@portal_controller.post('/yiyi/{yiyi_id}/llm-check')
+async def llm_check_yiyi(yiyi_id: int, query_db: Annotated[AsyncSession, DBSessionDependency()]):
+    """一事一议 LLM 核验 — 调用 LLM 分析材料判断受理条件"""
+    from sqlalchemy import text
+
+    # 找申请记录
+    yiyi = (await query_db.execute(select(EvalYiyi).where(EvalYiyi.id == yiyi_id))).scalars().first()
+    if not yiyi:
+        return JSONResponse(content={'code':404,'msg':'申请不存在'})
+
+    # 读取项目材料
+    from module_eval.service.eval_file_service import EvalFileService
+    materials_text = ''
+
+    # 使用同步引擎读取
+    from sqlalchemy import create_engine
+    from config.env import DataBaseConfig
+    sync_url = f'mysql+pymysql://{DataBaseConfig.db_username}:{DataBaseConfig.db_password}@{DataBaseConfig.db_host}:{DataBaseConfig.db_port}/{DataBaseConfig.db_database}'
+    sync_engine = create_engine(sync_url)
+    with sync_engine.connect() as conn:
+        rows = conn.execute(
+            text("SELECT file_name, text_content FROM eval_material WHERE project_id=:pid AND parse_status='done' AND text_content IS NOT NULL AND text_content != ''"),
+            {'pid': yiyi.project_id}
+        ).fetchall()
+        parts = []
+        for row in rows:
+            parts.append(f"--- {row[0]} ---\n{(row[1] or '')[:3000]}")
+        materials_text = '\n\n'.join(parts)
+
+    if not materials_text:
+        materials_text = '暂无上传材料'
+
+    # 调用 LLM
+    from module_eval.service.eval_llm_client import EvalLlmClient
+    apply_type = yiyi.apply_type or ''
+    prompt = f"""你是一事一议受理条件审核专家。请根据以下项目材料，判断受理条件是否满足。
+
+承接模式: {apply_type}
+
+检查项:
+1. 市场分类 — 项目所在国别是否非受限市场？
+2. 安全等级 — 安全风险等级是否不超过C级？
+3. 合同额门槛 — 合同额是否≥500万美元？
+4. 资金落实 — 项目资金是否已落实？
+5. 招标程序 — 招标程序是否合规？
+6. 合规风险 — 是否存在合规风险？
+7. 机构设置 — 海外机构是否已设立？
+
+{f"附加条件（{apply_type}模式）:" if apply_type else ""}
+{f"- 利润率 ≥ {'6%' if apply_type=='股份公司' else '8%'}" if apply_type else ""}
+{f"- 月进度付款 ≥ 85%（非股份公司）" if apply_type=='非股份公司' else ""}
+{f"- 工期罚款 ≤ {'10%' if apply_type=='股份公司' else '7%'}" if apply_type=='非股份公司' else ""}
+
+项目材料:
+{materials_text[:8000]}
+
+请输出 JSON 格式结果，每个检查项包含 pass(bool)、value(实际值)、threshold(阈值)、evidence(材料原文证据):
+{{
+  "checks": {{
+    "market_category": {{"pass": true/false, "value": "...", "threshold": "非受限", "evidence": "..."}},
+    ...
+  }},
+  "summary": "总评",
+  "all_pass": true/false
+}}
+"""
+    try:
+        resp = EvalLlmClient.call_llm_sync([
+            {'role': 'system', 'content': '你是一事一议受理条件审核专家。输出JSON。'},
+            {'role': 'user', 'content': prompt},
+        ])
+        import re
+        m = re.search(r'\{.*\}', resp, re.DOTALL)
+        if m:
+            result = json.loads(m.group(0))
+        else:
+            raise ValueError('JSON解析失败')
+    except Exception as e:
+        return JSONResponse(content={'code':500,'msg':f'LLM核验失败: {str(e)[:200]}'})
+
+    all_pass = result.get('all_pass', False)
+    new_status = 'reviewing' if all_pass else 'accept_rejected'
+    await query_db.execute(
+        text("UPDATE eval_yiyi SET eligibility_json=:json, status=:st WHERE id=:id"),
+        {'json': json.dumps(result, ensure_ascii=False), 'st': new_status, 'id': yiyi_id}
+    )
+    await query_db.commit()
+    return ResponseUtil.success(data=result)
+
+
 @portal_controller.post('/yiyi/{yiyi_id}/approve')
 async def approve_yiyi(yiyi_id: int, query_db: Annotated[AsyncSession, DBSessionDependency()], body: Annotated[dict, Body(...)]):
     """一事一议审批"""

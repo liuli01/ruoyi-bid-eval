@@ -90,11 +90,14 @@ async function saveSettings() {
 async function testConnection() {
   testResult.value = '测试中...'
   try {
-    const res = await request({ url: '/eval/llm/status', method: 'get' })
-    const d = res.data || res
-    testResult.value = `连接成功\n  模型: ${d.model}\n  地址: ${d.apiBase}\n  状态: ${d.configured ? '已配置' : '未配置'}`
+    const res = await request({ url: '/eval/llm/test', method: 'post' })
+    if (res.code === 200) {
+      testResult.value = `✅ 连接成功\n  回复: ${res.data.response}\n  耗时: ${res.data.elapsed}s`
+    } else {
+      testResult.value = `❌ 连接失败: ${res.msg}`
+    }
   } catch (e) {
-    testResult.value = `连接失败: ${e}`
+    testResult.value = `❌ 连接失败: ${e}`
   }
 }
 

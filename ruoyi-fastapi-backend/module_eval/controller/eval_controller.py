@@ -151,6 +151,26 @@ async def save_settings(
         return JSONResponse(content={'code': 500, 'msg': str(e)[:200]})
 
 
+@eval_controller.post(
+    '/llm/test',
+    summary='测试 LLM 连接',
+    description='用一条简单 prompt 测试 LLM 是否可用',
+)
+async def test_llm(request: Request) -> Response:
+    """测试 LLM 连接"""
+    from module_eval.service.eval_llm_client import EvalLlmClient
+    import time
+    t0 = time.time()
+    try:
+        resp = EvalLlmClient.call_llm_sync([
+            {'role': 'user', 'content': '回复数字 42 即可。'}
+        ])
+        elapsed = round(time.time() - t0, 2)
+        return JSONResponse(content={'code': 200, 'msg': '连接成功', 'data': {'response': resp.strip()[:100], 'elapsed': elapsed}})
+    except Exception as e:
+        return JSONResponse(content={'code': 500, 'msg': f'LLM 连接失败: {str(e)[:200]}'})
+
+
 @eval_controller.get(
     '/rules',
     summary='规则列表',

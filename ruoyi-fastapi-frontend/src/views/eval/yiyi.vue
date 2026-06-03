@@ -17,6 +17,7 @@
         <template #default="s">
           <el-button type="text" @click="viewDetail(s.row)">详情</el-button>
           <el-button v-if="s.row.status==='draft'" type="text" @click="runCheck(s.row)">受理核验</el-button>
+          <el-button v-if="s.row.status==='draft'" type="text" @click="runLlmCheck(s.row)">LLM核验</el-button>
           <el-button v-if="s.row.status==='reviewing'" type="text" @click="openApprove(s.row)">审批</el-button>
         </template>
       </el-table-column>
@@ -78,6 +79,7 @@
 <script setup name="EvalYiyi">
 import { ref, onMounted } from 'vue'
 import { listYiyi, createYiyi, getYiyi, checkYiyi, approveYiyi } from '@/api/eval/portal'
+import request from '@/utils/request'
 const list = ref([]); const loading = ref(false); const detail = ref(null); const actionRow = ref(null)
 const createOpen = ref(false); const detailOpen = ref(false); const checkOpen = ref(false); const approveOpen = ref(false)
 const checkResult = ref(null); const approveOpinion = ref('')
@@ -96,6 +98,10 @@ async function submitCreate() {
   await createYiyi(form.value); createOpen.value=false; getList()
 }
 async function viewDetail(row) { detailOpen.value=true; const r=await getYiyi(row.id); detail.value=r.data||r }
+async function runLlmCheck(row) {
+  const r = await request({ url:`/portal/yiyi/${row.id}/llm-check`, method:'post' })
+  checkResult.value = r.data || r; checkOpen.value = true; getList()
+}
 async function runCheck(row) {
   const params = { applyType: row.applyType, profitRate: 7, paymentTerms: 85, penaltyRate: 5 }
   const r = await checkYiyi(row.id, params); checkResult.value = r.data||r; checkOpen.value=true; getList()
