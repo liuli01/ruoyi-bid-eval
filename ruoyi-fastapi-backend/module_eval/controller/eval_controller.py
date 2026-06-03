@@ -151,6 +151,108 @@ async def save_settings(
         return JSONResponse(content={'code': 500, 'msg': str(e)[:200]})
 
 
+@eval_controller.get(
+    '/audit/{project_id}',
+    summary='审计追溯',
+    description='获取项目的操作审计时间线',
+)
+async def get_audit_log(
+    project_id: int,
+    query_db: Annotated[AsyncSession, DBSessionDependency()],
+) -> Response:
+    """项目审计追溯 — 操作日志 + 评审记录"""
+    from sqlalchemy import text, desc
+
+    # 操作日志
+    logs = (await query_db.execute(
+        text("SELECT oper_id, title, business_type, oper_name, oper_time, oper_param, json_result, status, error_msg FROM sys_oper_log WHERE oper_param LIKE :pid ORDER BY oper_time DESC LIMIT 50"),
+        {'pid': f'%{project_id}%'}
+    )).fetchall()
+
+    # 评审记录
+    reviews = (await query_db.execute(
+        select(EvalReview).where(EvalReview.project_id == project_id).order_by(desc(EvalReview.create_time))
+    )).scalars().all()
+
+    timeline = []
+    for r in reviews:
+        timeline.append({
+            'type': 'review',
+            'id': r.review_id,
+            'action': f'评审 #{r.review_id} — {r.status}',
+            'detail': f'模式: {r.review_mode}, 触发: {r.triggered_count or 0}条, 耗时: {r.elapsed_sec or "-"}s',
+            'time': str(r.create_time) if r.create_time else '',
+            'status': r.status,
+        })
+    for l in logs:
+        timeline.append({
+            'type': 'operation',
+            'id': l.oper_id,
+            'action': l.title or '',
+            'detail': f'操作人: {l.oper_name or ""}, 参数: {str(l.oper_param or "")[:100]}',
+            'time': str(l.oper_time) if l.oper_time else '',
+            'status': 'success' if l.status == '0' else 'error',
+        })
+
+    timeline.sort(key=lambda x: x['time'], reverse=True)
+    return ResponseUtil.success(data=timeline)
+
+
+@eval_controller.post(
+    '/f3/generate',
+    summary='F3 签报生成',
+    description='生成签报 .docx（从评审意见+项目信息）',
+)
+async def generate_f3(
+    request: Request,
+    body: Annotated[dict, Body(description='{projectId, reviewId}')],
+    query_db: Annotated[AsyncSession, DBSessionDependency()],
+) -> Response:
+    """F3 签报生成"""
+    project_id = body.get('projectId', 0)
+    review_id = body.get('reviewId', 0)
+
+    from module_eval.service.eval_docx_renderer import render_opinions_docx
+    from module_eval.dao.eval_dao import EvalProjectDao, EvalReviewDao, EvalOpinionDao
+
+    proj = await EvalProjectDao.get_project_by_id(query_db, project_id)
+    opinions = []
+    if review_id:
+        ops = await EvalOpinionDao.get_opinions_by_review(query_db, review_id)
+        opinions = [{
+            'department': op.department,
+            'rule_id': op.rule_id or '',
+            'title': op.title or '',
+            'content': op.content or '',
+            'risk_level': op.risk_level or 'medium',
+            'evidence': op.evidence or '',
+        } for op in ops]
+
+    # 从项目材料中提取回复函内容（如果有）
+    from module_eval.entity.do.eval_do import EvalMaterial
+    reply_text = ''
+    mats = (await query_db.execute(
+        select(EvalMaterial).where(EvalMaterial.project_id == project_id, EvalMaterial.category == '回复函')
+    )).scalars().all()
+    if mats:
+        reply_text = (mats[0].text_content or '')[:2000]
+
+    docx_bytes = render_opinions_docx(
+        project_name=proj.project_name if proj else f'项目#{project_id}',
+        country=getattr(proj, 'country', '') or '',
+        amount=getattr(proj, 'amount', '') or '',
+        stage=getattr(proj, 'stage', '') or '',
+        opinions=opinions,
+    )
+
+    filename = f'签报_{project_id}_{datetime.now().strftime("%Y%m%d")}.docx'
+    tmp_path = os.path.join(os.environ.get('TEMP', '/tmp'), filename)
+    with open(tmp_path, 'wb') as f:
+        f.write(docx_bytes)
+    from fastapi.responses import FileResponse
+    return FileResponse(tmp_path, filename=filename, media_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+
+
 @eval_controller.post(
     '/llm/test',
     summary='测试 LLM 连接',
