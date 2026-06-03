@@ -5,7 +5,7 @@ from datetime import datetime
 from pathlib import Path as FilePath
 from typing import Annotated
 
-from fastapi import Path, Query, Request, Response, UploadFile, File, Form
+from fastapi import Body, Path, Query, Request, Response, UploadFile, File, Form
 from fastapi.responses import JSONResponse
 from sqlalchemy import ColumnElement
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -78,6 +78,77 @@ async def dashboard(
         'projectStatusDistribution': status_counts,
         'recentReviews': recent,
     })
+
+
+@eval_controller.get(
+    '/settings',
+    summary='系统设置',
+    description='获取评审系统配置',
+)
+async def get_settings(
+    request: Request,
+    query_db: Annotated[AsyncSession, DBSessionDependency()],
+) -> Response:
+    """读取评审系统配置"""
+    import os
+    from sqlalchemy import select, text
+    # 从 sys_config 表读取
+    keys = ['eval.review_mode', 'eval.llm_concurrency', 'eval.llm_model', 'eval.llm_base_url']
+    configs = {}
+    for k in keys:
+        r = await query_db.execute(
+            text("SELECT config_value FROM sys_config WHERE config_key=:key"),
+            {'key': k}
+        )
+        row = r.fetchone()
+        configs[k.split('.')[-1]] = row[0] if row else ''
+
+    return ResponseUtil.success(data={
+        'reviewMode': configs.get('review_mode', 'standard'),
+        'llmConcurrency': int(configs.get('llm_concurrency', '5')),
+        'llmModel': configs.get('llm_model', os.environ.get('DS_MODEL', 'deepseek-chat')),
+        'llmBaseUrl': configs.get('llm_base_url', os.environ.get('DS_API_BASE', 'https://api.deepseek.com')),
+        'llmConfigured': bool(os.environ.get('DS_API_KEY', '')),
+    })
+
+
+@eval_controller.post(
+    '/settings',
+    summary='保存设置',
+    description='保存评审系统配置',
+)
+async def save_settings(
+    request: Request,
+    body: Annotated[dict, Body(description='配置项键值对')],
+    query_db: Annotated[AsyncSession, DBSessionDependency()],
+) -> Response:
+    """保存评审系统配置"""
+    from sqlalchemy import text
+    key_map = {
+        'reviewMode': 'eval.review_mode',
+        'llmConcurrency': 'eval.llm_concurrency',
+        'llmModel': 'eval.llm_model',
+        'llmBaseUrl': 'eval.llm_base_url',
+    }
+    try:
+        for field, value in body.items():
+            config_key = key_map.get(field)
+            if not config_key:
+                continue
+            # upsert
+            await query_db.execute(
+                text("""
+                    INSERT INTO sys_config (config_name, config_key, config_value, config_type, create_by, create_time)
+                    VALUES (:name, :key, :value, 'Y', 'admin', NOW())
+                    ON DUPLICATE KEY UPDATE config_value=:value2
+                """),
+                {'name': config_key, 'key': config_key, 'value': str(value), 'value2': str(value)}
+            )
+        await query_db.commit()
+        return ResponseUtil.success(msg='设置已保存')
+    except Exception as e:
+        await query_db.rollback()
+        return JSONResponse(content={'code': 500, 'msg': str(e)[:200]})
 
 
 @eval_controller.get(
