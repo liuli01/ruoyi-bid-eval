@@ -152,3 +152,4 @@ cython_debug/
 .opencode/
 .qoder/
 .trae/
+.env.dev
