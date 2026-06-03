@@ -17,6 +17,7 @@
               <el-descriptions-item label="领导意见" :span="2">{{ detail.leaderOpinion || '-' }}</el-descriptions-item>
               <el-descriptions-item label="核稿意见" :span="2">{{ detail.officeOpinion || '-' }}</el-descriptions-item>
             </el-descriptions>
+            <el-button type="text" icon="Upload" @click="uploadFiles(detail.projectId)" style="margin-top:8px">上传材料</el-button>
             <div v-if="detail.draftDoc" style="margin-top:8px">
               <h4>发函草稿</h4>
               <pre style="background:#f5f7fa;padding:12px;white-space:pre-wrap">{{ detail.draftDoc }}</pre>
@@ -73,7 +74,9 @@
 <script setup name="EvalConsultation">
 import { ref, onMounted } from 'vue'
 import { listConsultation, createConsultation, getConsultation, approveConsultation } from '@/api/eval/portal'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 const list = ref([])
 const detail = ref(null)
 const loading = ref(false)
@@ -112,6 +115,7 @@ function openCreate() { createOpen.value = true }
 async function submitCreate() {
   await createConsultation(form.value); createOpen.value = false; getList()
 }
+function uploadFiles(pid) { router.push(`/eval/project?projectId=${pid}`) }
 async function getList() {
   loading.value = true; const r = await listConsultation()
   list.value = r.data || r || []; loading.value = false

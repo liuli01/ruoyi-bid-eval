@@ -75,6 +75,13 @@ async def approve_consultation(
         await query_db.execute(text(f"UPDATE eval_consultation SET {col}=:opin, status=:st, update_time=NOW() WHERE id=:id"), {'opin': opinion, 'st': new_status, 'id': consult_id})
     else:
         await query_db.execute(text("UPDATE eval_consultation SET status=:st, update_time=NOW() WHERE id=:id"), {'st': new_status, 'id': consult_id})
+
+    # 结论同步：回执后更新项目状态
+    if new_status in ('receipted',):
+        c = (await query_db.execute(select(EvalConsultation).where(EvalConsultation.id == consult_id))).scalars().first()
+        if c:
+            await query_db.execute(text("UPDATE eval_project SET status='completed' WHERE project_id=:pid"), {'pid': c.project_id})
+
     await query_db.commit()
     return ResponseUtil.success(msg=f'已推进至 {new_status}')
 
@@ -97,6 +104,23 @@ async def get_approval(approval_id: int, query_db: Annotated[AsyncSession, DBSes
     r = (await query_db.execute(select(EvalProjectApproval).where(EvalProjectApproval.id == approval_id))).scalars().first()
     from utils.common_util import CamelCaseUtil
     return ResponseUtil.success(data=CamelCaseUtil.transform_result(r) if r else None)
+
+
+@portal_controller.post('/approval/{approval_id}/approve')
+async def approve_approval(approval_id: int, query_db: Annotated[AsyncSession, DBSessionDependency()], body: Annotated[dict, Body(...)]):
+    """立项审批操作"""
+    from sqlalchemy import text
+    action = body.get('action', '')
+    opinion = body.get('opinion', '')
+    col_map = {'officer_review':'officer_opinion','draft_doc':'draft_doc','leader_approval':'leader_opinion','office_review':'office_opinion','submit':'','receipt':''}
+    status_map = {'officer_review':'draft_doc','draft_doc':'leader_approval','leader_approval':'office_review','office_review':'submitted','submit':'submitted','receipt':'receipted'}
+    col = col_map.get(action, ''); new_status = status_map.get(action, 'draft')
+    if col and opinion:
+        await query_db.execute(text(f"UPDATE eval_project_approval SET {col}=:opin, status=:st, update_time=NOW() WHERE id=:id"), {'opin':opinion, 'st':new_status, 'id':approval_id})
+    else:
+        await query_db.execute(text("UPDATE eval_project_approval SET status=:st, update_time=NOW() WHERE id=:id"), {'st':new_status, 'id':approval_id})
+    await query_db.commit()
+    return ResponseUtil.success(msg=f'已推进至 {new_status}')
 
 
 @portal_controller.post('/approval')
@@ -283,5 +307,10 @@ async def approve_yiyi(yiyi_id: int, query_db: Annotated[AsyncSession, DBSession
         text("UPDATE eval_yiyi SET leader_opinion=:opin, status=:st, update_time=NOW() WHERE id=:id"),
         {'opin': opinion, 'st': new_status, 'id': yiyi_id}
     )
+    # 结论同步：批复后项目进入可评审状态
+    if new_status == 'approved':
+        y = (await query_db.execute(select(EvalYiyi).where(EvalYiyi.id == yiyi_id))).scalars().first()
+        if y:
+            await query_db.execute(text("UPDATE eval_project SET status='pending' WHERE project_id=:pid"), {'pid': y.project_id})
     await query_db.commit()
     return ResponseUtil.success(msg=f'已{("同意" if action == "approve" else "拒绝")}')
