@@ -80,3 +80,65 @@ class EvalMaterial(Base):
     text_content = Column(Text, nullable=True, comment='提取的文本内容')
     parse_status = Column(String(20), nullable=False, server_default='pending', comment='解析状态 pending/done/error')
     create_time = Column(DateTime, nullable=True, default=datetime.now(), comment='创建时间')
+
+
+class EvalConsultation(Base):
+    """重大项目风险会商"""
+    __tablename__ = 'eval_consultation'
+    __table_args__ = {'comment': '重大项目风险会商表'}
+
+    id = Column(BigInteger, primary_key=True, nullable=False, autoincrement=True, comment='主键')
+    project_id = Column(BigInteger, nullable=False, comment='关联项目ID')
+    status = Column(String(20), nullable=False, server_default='draft', comment='状态')
+    initiator = Column(String(100), nullable=True, server_default="''", comment='经办人')
+    materials_json = Column(Text, nullable=True, comment='上传材料JSON')
+    officer_opinion = Column(Text, nullable=True, comment='经办人审核意见')
+    draft_doc = Column(Text, nullable=True, comment='发函草稿')
+    leader_opinion = Column(Text, nullable=True, comment='领导审批意见')
+    office_opinion = Column(Text, nullable=True, comment='办公室核稿意见')
+    commerce_receipt = Column(Text, nullable=True, comment='商务部回执')
+    create_by = Column(String(64), nullable=True, server_default="''", comment='创建者')
+    create_time = Column(DateTime, nullable=True, default=datetime.now(), comment='创建时间')
+    update_by = Column(String(64), nullable=True, server_default="''", comment='更新者')
+    update_time = Column(DateTime, nullable=True, default=datetime.now(), comment='更新时间')
+
+
+class EvalProjectApproval(Base):
+    """特定项目立项"""
+    __tablename__ = 'eval_project_approval'
+    __table_args__ = {'comment': '特定项目立项表'}
+
+    id = Column(BigInteger, primary_key=True, nullable=False, autoincrement=True, comment='主键')
+    project_id = Column(BigInteger, nullable=False, comment='关联项目ID')
+    status = Column(String(20), nullable=False, server_default='draft', comment='状态')
+    trigger_reasons = Column(String(200), nullable=True, server_default="''", comment='触发条件')
+    materials_json = Column(Text, nullable=True, comment='9项附件JSON')
+    officer_opinion = Column(Text, nullable=True, comment='经办人审核意见')
+    draft_doc = Column(Text, nullable=True, comment='立项函草稿')
+    leader_opinion = Column(Text, nullable=True, comment='领导审批意见')
+    office_opinion = Column(Text, nullable=True, comment='办公室核稿意见')
+    commerce_receipt = Column(Text, nullable=True, comment='商务部批复')
+    create_by = Column(String(64), nullable=True, server_default="''", comment='创建者')
+    create_time = Column(DateTime, nullable=True, default=datetime.now(), comment='创建时间')
+    update_by = Column(String(64), nullable=True, server_default="''", comment='更新者')
+    update_time = Column(DateTime, nullable=True, default=datetime.now(), comment='更新时间')
+
+
+class EvalYiyi(Base):
+    """一事一议"""
+    __tablename__ = 'eval_yiyi'
+    __table_args__ = {'comment': '一事一议表'}
+
+    id = Column(BigInteger, primary_key=True, nullable=False, autoincrement=True, comment='主键')
+    project_id = Column(BigInteger, nullable=False, comment='关联项目ID')
+    status = Column(String(20), nullable=False, server_default='draft', comment='状态')
+    apply_type = Column(String(50), nullable=True, server_default="''", comment='承接模式')
+    materials_json = Column(Text, nullable=True, comment='上传材料JSON')
+    eligibility_json = Column(Text, nullable=True, comment='受理条件核验JSON')
+    officer_opinion = Column(Text, nullable=True, comment='经办人意见')
+    draft_doc = Column(Text, nullable=True, comment='批复文单/正文')
+    leader_opinion = Column(Text, nullable=True, comment='领导审批意见')
+    create_by = Column(String(64), nullable=True, server_default="''", comment='创建者')
+    create_time = Column(DateTime, nullable=True, default=datetime.now(), comment='创建时间')
+    update_by = Column(String(64), nullable=True, server_default="''", comment='更新者')
+    update_time = Column(DateTime, nullable=True, default=datetime.now(), comment='更新时间')
