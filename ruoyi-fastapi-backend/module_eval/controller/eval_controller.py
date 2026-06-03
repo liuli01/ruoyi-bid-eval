@@ -253,6 +253,49 @@ async def generate_f3(
     return FileResponse(tmp_path, filename=filename, media_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
 
 
+# ======== 国别字典 ========
+
+@eval_controller.get('/country')
+async def list_country(query_db: Annotated[AsyncSession, DBSessionDependency()]):
+    from module_eval.entity.do.eval_do import EvalCountryDict
+    result = await query_db.execute(select(EvalCountryDict).order_by(EvalCountryDict.sort_order))
+    from utils.common_util import CamelCaseUtil
+    return ResponseUtil.success(data=[CamelCaseUtil.transform_result(r) for r in result.scalars().all()])
+
+
+@eval_controller.post('/country')
+async def add_country(body: Annotated[dict, Body()], query_db: Annotated[AsyncSession, DBSessionDependency()]):
+    from sqlalchemy import text
+    now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    r = await query_db.execute(
+        text("INSERT INTO eval_country_dict (country_name, country_code, region, risk_level, political_system, election_cycle, sort_order, create_time) VALUES (:name, :code, :region, :risk, :ps, :ec, :sort, :now)"),
+        {'name': body.get('countryName', ''), 'code': body.get('countryCode', ''), 'region': body.get('region', ''), 'risk': body.get('riskLevel', 'medium'), 'ps': body.get('politicalSystem', ''), 'ec': body.get('electionCycle', ''), 'sort': int(body.get('sortOrder', 0)), 'now': now}
+    )
+    await query_db.commit()
+    return ResponseUtil.success(data={'id': r.lastrowid})
+
+
+@eval_controller.put('/country/{country_id}')
+async def update_country(country_id: int, body: Annotated[dict, Body()], query_db: Annotated[AsyncSession, DBSessionDependency()]):
+    from sqlalchemy import text
+    sets, params = [], {'id': country_id}
+    for field, col in [('countryName','country_name'),('countryCode','country_code'),('region','region'),('riskLevel','risk_level'),('politicalSystem','political_system'),('electionCycle','election_cycle'),('sortOrder','sort_order'),('remark','remark')]:
+        if field in body:
+            sets.append(f"{col}=:{field}"); params[field] = body[field]
+    if sets:
+        await query_db.execute(text(f"UPDATE eval_country_dict SET {','.join(sets)}, update_time=NOW() WHERE id=:id"), params)
+        await query_db.commit()
+    return ResponseUtil.success(msg='已更新')
+
+
+@eval_controller.delete('/country/{country_id}')
+async def delete_country(country_id: int, query_db: Annotated[AsyncSession, DBSessionDependency()]):
+    from sqlalchemy import text
+    await query_db.execute(text("DELETE FROM eval_country_dict WHERE id=:id"), {'id': country_id})
+    await query_db.commit()
+    return ResponseUtil.success(msg='已删除')
+
+
 @eval_controller.post(
     '/llm/test',
     summary='测试 LLM 连接',

@@ -124,6 +124,27 @@ class EvalProjectApproval(Base):
     update_time = Column(DateTime, nullable=True, default=datetime.now(), comment='更新时间')
 
 
+class EvalCountryDict(Base):
+    """国别字典"""
+    __tablename__ = 'eval_country_dict'
+    __table_args__ = {'comment': '国别字典表'}
+
+    id = Column(BigInteger, primary_key=True, nullable=False, autoincrement=True, comment='主键')
+    country_name = Column(String(100), nullable=False, comment='国别名称')
+    country_code = Column(String(10), nullable=False, comment='国别代码')
+    region = Column(String(50), nullable=True, server_default="''", comment='区域')
+    risk_level = Column(String(20), nullable=True, server_default='medium', comment='风险等级')
+    political_system = Column(String(50), nullable=True, server_default="''", comment='政治体制')
+    election_cycle = Column(String(50), nullable=True, server_default="''", comment='选举周期')
+    sort_order = Column(Integer, nullable=True, default=0, comment='排序')
+    status = Column(String(1), nullable=True, server_default='0', comment='状态')
+    create_by = Column(String(64), nullable=True, server_default="''", comment='创建者')
+    create_time = Column(DateTime, nullable=True, default=datetime.now(), comment='创建时间')
+    update_by = Column(String(64), nullable=True, server_default="''", comment='更新者')
+    update_time = Column(DateTime, nullable=True, default=datetime.now(), comment='更新时间')
+    remark = Column(String(500), nullable=True, server_default="''", comment='备注')
+
+
 class EvalYiyi(Base):
     """一事一议"""
     __tablename__ = 'eval_yiyi'
