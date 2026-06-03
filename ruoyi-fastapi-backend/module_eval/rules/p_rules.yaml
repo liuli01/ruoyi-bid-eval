@@ -1,0 +1,1045 @@
+- rule_id: P-A1
+  name: 提级评审——领导人见签
+  department: 海外部
+  conditions:
+  - field: leader_witness_signing
+    operator: eq
+    value: true
+  full_text: '【规则编号】P-A1
+
+    【规则名称】提级评审——领导人见签
+
+    【字段】内容
+
+    【制度依据】第2.1条第1款
+
+    【匹配条件】项目涉及我党和国家领导人见签（见证签约）
+
+    【制度要求】自动纳入股份公司直接评审，不得由子企业自行决策
+
+    【对应R类规则】无对应
+
+    【触发动作】项目自动列入股份公司提级评审清单，评审结论须经股份公司总经理办公会审议'
+  suggestion_template: 自动纳入股份公司直接评审，不得由子企业自行决策
+  category: mandatory
+  basis: 第2.1条第1款
+  level: high
+- rule_id: P-A2
+  name: 提级评审——多边开发银行出资
+  department: 海外部
+  conditions:
+  - field: procurement_agency
+    operator: in
+    value:
+    - WorldBank
+    - ADB
+    - AfDB
+  - field: bidding_entity
+    operator: contains
+    value: 股份公司
+    logic: and
+  full_text: '【规则编号】P-A2
+
+    【规则名称】提级评审——多边开发银行出资
+
+    【字段】内容
+
+    【制度依据】第2.1条第2款
+
+    【匹配条件】以股份公司（含分公司等非法人机构）名义参与的世界银行、亚洲开发银行、非洲开发银行等多边开发银行出资项目
+
+    【制度要求】自动纳入股份公司直接评审
+
+    【对应R类规则】无对应
+
+    【触发动作】项目列入提级评审，同时需按中建股海函字〔2025〕44号文要求报送多边银行专项资料'
+  suggestion_template: 自动纳入股份公司直接评审
+  category: mandatory
+  basis: 第2.1条第2款
+  level: high
+- rule_id: P-A3
+  name: 提级评审——需股份公司增信
+  department:
+  - 海外部
+  - 财务部
+  conditions:
+  - field: requires_corporate_guarantee
+    operator: eq
+    value: true
+  - field: requires_financing_support
+    operator: eq
+    value: true
+    logic: or
+  - field: requires_liquidity_support
+    operator: eq
+    value: true
+    logic: or
+  full_text: '【规则编号】P-A3
+
+    【规则名称】提级评审——需股份公司增信
+
+    【字段】内容
+
+    【制度依据】第2.1条第3款
+
+    【匹配条件】投（议）标或实施过程中需由股份公司提供担保、融资、流动性资金等方面支持的项目
+
+    【制度要求】自动纳入股份公司直接评审
+
+    【对应R类规则】R-C1（母公司担保）应同步触发
+
+    【触发动作】需同时评估担保/融资/流动性支持的类型、金额和对股份公司财务报表的影响'
+  suggestion_template: 自动纳入股份公司直接评审
+  category: mandatory
+  basis: 第2.1条第3款
+  level: high
+- rule_id: P-A4
+  name: 提级评审——战略性项目
+  department: 海外部
+  conditions:
+  - field: strategic_project_listed
+    operator: eq
+    value: true
+  full_text: '【规则编号】P-A4
+
+    【规则名称】提级评审——战略性项目
+
+    【字段】内容
+
+    【制度依据】第2.1条第4款
+
+    【匹配条件】项目已纳入股份公司战略性项目清单
+
+    【制度要求】自动纳入股份公司直接评审'
+  suggestion_template: 自动纳入股份公司直接评审
+  category: mandatory
+  basis: 第2.1条第4款
+  level: high
+- rule_id: P-A5
+  name: 提级评审——其他
+  department: 海外部
+  conditions:
+  - field: corporate_requires_escalation
+    operator: eq
+    value: true
+  full_text: '【规则编号】P-A5
+
+    【规则名称】提级评审——其他
+
+    【字段】内容
+
+    【制度依据】第2.1条第5款
+
+    【匹配条件】股份公司要求提级评审的其他项目
+
+    【制度要求】按股份公司要求执行'
+  suggestion_template: 按股份公司要求执行
+  category: mandatory
+  basis: 第2.1条第5款
+  level: high
+- rule_id: P-A6
+  name: 分级评审——超出子企业授权
+  department: 海外部
+  conditions:
+  - field: meets_market_access
+    operator: eq
+    value: true
+  - field: contract_amount
+    operator: gt
+    value: subsidiary_authorization_limit
+    logic: and
+  full_text: '【规则编号】P-A6
+
+    【规则名称】分级评审——超出子企业授权
+
+    【字段】内容
+
+    【制度依据】第2.2.1条
+
+    【匹配条件】满足股份公司海外市场准入要求，但合同额超出二级子企业授权额度
+
+    【制度要求】由股份公司评审决策，子企业完成内部评审后报送
+
+    【验证】奇迪亚（$1.5B）、瓦迪萨法尔（$2.5B）、樟宜T5（$3.5B）、布里斯班均触发'
+  suggestion_template: 由股份公司评审决策，子企业完成内部评审后报送
+  category: mandatory
+  basis: 第2.2.1条
+  level: high
+- rule_id: P-A7
+  name: 分级评审——子企业授权额度内
+  department: 海外部
+  conditions:
+  - field: contract_amount
+    operator: lte
+    value: subsidiary_authorization_limit
+  full_text: '【规则编号】P-A7
+
+    【规则名称】分级评审——子企业授权额度内
+
+    【字段】内容
+
+    【制度依据】第2.2.2条
+
+    【匹配条件】在二级子企业授权额度内
+
+    【制度要求】由二级子企业自行评审决策
+
+    【例外】以下情况即使额度内，子企业总部也应**提级管理**：①以股份公司名义参与；②多边开发银行出资项目；③新进入国别市场项目'
+  suggestion_template: 由二级子企业自行评审决策
+  category: baseline
+  basis: 第2.2.2条
+  level: medium
+- rule_id: P-A8
+  name: 授权动态调整
+  department: 海外部
+  conditions:
+  - field: subsidiary_risk_capability_declined
+    operator: eq
+    value: true
+  full_text: '【规则编号】P-A8
+
+    【规则名称】授权动态调整
+
+    【字段】内容
+
+    【制度依据】第2.2.3条
+
+    【匹配条件】子企业风险管控能力下降或出现重大风险事件
+
+    【制度要求】股份公司有权根据市场环境变化、子企业风险管控能力等情况，动态调整授权额度
+
+    【触发动作】如子企业近期出现评审退回/违规处罚等记录，即使项目在授权额度内也应考虑提级'
+  suggestion_template: 股份公司有权根据市场环境变化、子企业风险管控能力等情况，动态调整授权额度
+  category: baseline
+  basis: 第2.2.3条
+  level: medium
+- rule_id: P-B1
+  name: 合规红线
+  department:
+  - 法律事务部
+  - 海外部
+  conditions:
+  - field: compliance_violation
+    operator: eq
+    value: true
+  - field: violates_four_compliances
+    operator: eq
+    value: true
+    logic: or
+  full_text: '【规则编号】P-B1
+
+    【规则名称】合规红线
+
+    【字段】内容
+
+    【制度依据】附件1第1.1条
+
+    【匹配条件】项目违反我国或项目所在国家（地区）相关法律法规；或违反《中国建筑股份有限公司推进海外高质量市场营销实施细则》中的"四遵守""四严禁""四不得"或股份公司有关制度规定
+
+    【制度后果】**禁止性底线**——应终止投（议）标
+
+    【对应R类规则】R-H6（法律合规）
+
+    【备注】此项为"一票否决"，评审结论应为"不同意"'
+  suggestion_template: '项目违反我国或项目所在国家（地区）相关法律法规，或违反《中国建筑股份有限公司推进海外高质量市场营销实施细则》中的"四遵守""四严禁""四不得"或股份公司有关制度规定，依据附件1第1.1条，触及禁止性底线，应终止投（议）标。此项为"一票否决"，评审结论应为"不同意"。
+
+    '
+  category: mandatory
+  basis: 附件1第1.1条
+  level: high
+- rule_id: P-B2
+  name: 业主资信红线
+  department:
+  - 海外部
+  - 法律事务部
+  conditions:
+  - field: owner_conflicts_with_national_interest
+    operator: eq
+    value: true
+  - field: owner_dishonest_executor
+    operator: eq
+    value: true
+    logic: or
+  - field: owner_major_default_amount
+    operator: gte
+    value: 50000000
+    logic: or
+  - field: owner_bankruptcy_reorganization
+    operator: eq
+    value: true
+    logic: or
+  full_text: '【规则编号】P-B2
+
+    【规则名称】业主资信红线
+
+    【字段】内容
+
+    【制度依据】附件1第1.2条
+
+    【匹配条件】业主或项目所涉业务与我国国家利益、外交和经贸政策导向存在冲突，我国政府主管部门禁止合作；或业主及实际控制人被纳入国家失信被执行人名录，或存在重大债务违约（标的≥**5000万元**）或正在破产重整
+
+    【制度后果】**禁止性底线**——应终止投（议）标
+
+    【对应R类规则】F-R5（业主资金来源）
+
+    【触发动作】需核实业主是否在失信名单中，资信调查须覆盖此项'
+  suggestion_template: '业主或项目所涉业务与我国国家利益、外交和经贸政策导向存在冲突，或业主及实际控制人被纳入国家失信被执行人名录，或存在重大债务违约（标的≥5000万元）或正在破产重整，依据附件1第1.2条，触及禁止性底线，应终止投（议）标。需核实业主是否在失信名单中，资信调查须覆盖此项。
+
+    '
+  category: mandatory
+  basis: 附件1第1.2条
+  level: high
+- rule_id: P-C1
+  name: 国别市场风险
+  department: 海外部
+  conditions:
+  - field: country_risk_level
+    operator: eq
+    value: 1
+  trigger_scenarios:
+  - 项目所在国为中东地区国家，即使国别调查表无等级1风险，仍应关注地缘政治、地区冲突、油价波动等潜在风险
+  - 项目所在国与我国双边关系存在波动历史，或周边地区存在武装冲突（如也门、叙利亚等），应考虑国别市场风险
+  - 项目依赖主权财富基金或国家石油收入作为资金来源，应关注油价波动对项目资金的影响
+  - 项目为国际重大赛事或国家级战略项目，政治敏感性高，即使表面稳定也应提醒风险防控
+  full_text: '【规则编号】P-C1
+
+    【规则名称】国别市场风险
+
+    【字段】内容
+
+    【制度依据】附件1第2.1条
+
+    【匹配条件】项目所在国家（地区）存在较大政治、经济、安全等风险
+
+    【制度要求】须在评审阶段制定风险防控措施
+
+    【对应R类规则】R-K1（政治风险）
+
+    【量化参考】依据附件2-4国别市场调查表，28项风险要素中单项等级为1（重大风险）即触发'
+  suggestion_template: 须在评审阶段制定风险防控措施
+  category: restricted
+  basis: 附件1第2.1条
+  level: high
+- rule_id: P-C2
+  name: 合规限制
+  department: 法律事务部
+  conditions:
+  - field: approval_procedure_incomplete
+    operator: eq
+    value: true
+  full_text: '【规则编号】P-C2
+
+    【规则名称】合规限制
+
+    【字段】内容
+
+    【制度依据】附件1第2.2条
+
+    【匹配条件】投标阶段项目立项或报规报建等审批程序暂未完成
+
+    【制度要求】可通过完善合同条款等方式规避的合规风险，须制定防控措施
+
+    【对应R类规则】无直接对应'
+  suggestion_template: 可通过完善合同条款等方式规避的合规风险，须制定防控措施
+  category: restricted
+  basis: 附件1第2.2条
+  level: medium
+- rule_id: P-C3
+  name: 业主资信限制
+  department: 海外部
+  conditions:
+  - field: owner_equity_complex
+    operator: eq
+    value: true
+  - field: owner_major_performance_risk
+    operator: eq
+    value: true
+    logic: or
+  - field: owner_major_litigation_with_cscec
+    operator: eq
+    value: true
+    logic: or
+  full_text: '【规则编号】P-C3
+
+    【规则名称】业主资信限制
+
+    【字段】内容
+
+    【制度依据】附件1第2.3条
+
+    【匹配条件】业主股权结构复杂、实际控制人或主要股东背景不明；或经资信调查存在重大履约风险、与股份公司存在重大诉讼
+
+    【制度要求】须在评审阶段制定风险防控措施
+
+    【对应R类规则】R-A2~R-A3（联营体合作方调查）'
+  suggestion_template: 须在评审阶段制定风险防控措施
+  category: restricted
+  basis: 附件1第2.3条
+  level: high
+- rule_id: P-C4
+  name: 工期风险底线
+  department: 海外部
+  conditions:
+  - field: delay_penalty_cap
+    operator: gt
+    value: 10
+  - field: delay_penalty_days_to_10pct
+    operator: lt
+    value: 90
+    logic: or
+  - field: milestone_and_total_delay_double_penalty
+    operator: eq
+    value: true
+    logic: or
+  - field: non_contractor_delay_no_claim
+    operator: eq
+    value: true
+    logic: or
+  - field: schedule_feasibility_risk
+    operator: eq
+    value: true
+    logic: or
+  full_text: '【规则编号】P-C4
+
+    【规则名称】工期风险底线
+
+    【字段】内容
+
+    【制度依据】附件1第2.4条
+
+    【匹配条件】满足以下任一：①误期罚款上限超过**10%**合同额；②未约定上限且日罚金达到10%合同额的时间少于**90天**；③里程碑节点与总工期延误**重复罚款**；④非承包商责任延误无法索赔工期/费用；⑤经评估合同工期难以实现
+
+    【制度要求】须制定风险防控措施
+
+    【对应R类规则】R-D1（重复罚款）、R-D2（罚款上限过高）、R-D3（阶段性罚款退还）
+
+    【R类增强】R-D2原目标值降到10%，制度明确**10%**为底线；新增90天标准为R类未覆盖'
+  suggestion_template: 须制定风险防控措施
+  category: restricted
+  basis: 附件1第2.4条
+  level: high
+- rule_id: P-C5
+  name: 价格风险底线
+  department: 海外部
+  conditions:
+  - field: non_contractor_design_fixed_lump_sum
+    operator: eq
+    value: true
+  - field: contractor_design_unclear_scope_fixed_lump_sum
+    operator: eq
+    value: true
+    logic: or
+  - field: no_price_adjustment_mechanism
+    operator: eq
+    value: true
+    logic: or
+  full_text: '【规则编号】P-C5
+
+    【规则名称】价格风险底线
+
+    【字段】内容
+
+    【制度依据】附件1第2.5条
+
+    【匹配条件】满足以下任一：①非承包商负责设计但招标文件不足以估算成本且要求**固定总价**；②承包商负责设计但未明确工作范围且要求**固定总价**；③合同期内法律/成本/汇率变动但合同**无调价机制**
+
+    【制度要求】须制定风险防控措施
+
+    【对应R类规则】R-G4（调价机制缺失）、R-E1（设计深度不足）'
+  suggestion_template: 须制定风险防控措施
+  category: restricted
+  basis: 附件1第2.5条
+  level: high
+- rule_id: P-C6
+  name: 现金流风险底线
+  department: 财务部
+  conditions:
+  - field: no_advance_payment
+    operator: eq
+    value: true
+  - field: monthly_progress_payment_ratio
+    operator: lt
+    value: 70
+    logic: or
+  - field: payment_interval_months
+    operator: gt
+    value: 3
+    logic: or
+  - field: retention_ratio
+    operator: gt
+    value: 10
+    logic: or
+  - field: advance_funding_amount
+    operator: gt
+    value: 50000000
+    logic: or
+  - field: advance_funding_ratio
+    operator: gt
+    value: 10
+    logic: or
+  - field: completion_acceptance_payment_ratio
+    operator: lt
+    value: 85
+    logic: or
+  - field: final_settlement_payment_ratio
+    operator: lt
+    value: 95
+    logic: or
+  full_text: '【规则编号】P-C6
+
+    【规则名称】现金流风险底线
+
+    【字段】内容
+
+    【制度依据】附件1第2.6条
+
+    【匹配条件】满足以下任一：①**无预付款**；②月进度/节点付款低于**70%**或支付间隔超过**3个月**；③保留金比例超过**10%**；④垫资超过**5000万元**或超过**10%**合同额；⑤竣工验收支付比例低于**85%**；⑥竣工结算付款比例低于**95%**
+
+    【制度要求】须制定风险防控措施
+
+    【对应R类规则】F-R4（预付款作为开工条件）、F-R6（业主付款违约）
+
+    【重要补充】**制度给出了明确的量化阈值**——现有R类规则中仅定性建议，P类提供了精确标尺'
+  suggestion_template: 须制定风险防控措施
+  category: restricted
+  basis: 附件1第2.6条
+  level: high
+- rule_id: P-C7
+  name: 保函和担保风险底线
+  department:
+  - 财务部
+  - 法律事务部
+  conditions:
+  - field: guarantee_cash_pledge
+    operator: eq
+    value: true
+  - field: guarantee_transferable_or_auto_extend
+    operator: eq
+    value: true
+    logic: or
+  - field: advance_payment_guarantee_no_reduction
+    operator: eq
+    value: true
+    logic: or
+  - field: performance_bond_before_financial_close
+    operator: eq
+    value: true
+    logic: or
+  - field: performance_bond_ratio
+    operator: gt
+    value: 10
+    logic: or
+  - field: requires_parent_company_guarantee
+    operator: eq
+    value: true
+    logic: or
+  full_text: '【规则编号】P-C7
+
+    【规则名称】保函和担保风险底线
+
+    【字段】内容
+
+    【制度依据】附件1第2.7条
+
+    【匹配条件】满足以下任一：①以**现金质押**方式开立保函；②保函超出我方份额或涉及**期限敞口/可转让/自动延期**；③预付款保函**无随抵扣减额**条款；④融资项目在融资关闭前提交**履约保函**；⑤履约保函超过**10%**合同额；⑥需提供**承诺函、完工担保、母公司担保**等对外担保
+
+    【制度要求】须制定风险防控措施
+
+    【对应R类规则】R-B1（保函自动延期+可转让）、R-B2（保函比例高）、R-B3（现金质押保函）、R-C1（母公司担保）
+
+    【R类增强】P-C7完整覆盖了6种保函/担保风险场景，R类规则覆盖了其中4种，**现金质押**和**融资前履约保函**为R类未覆盖'
+  suggestion_template: 须制定风险防控措施
+  category: restricted
+  basis: 附件1第2.7条
+  level: high
+- rule_id: P-C8
+  name: 承包商权责风险底线
+  department: 法律事务部
+  conditions:
+  - field: unconditional_suspend_right_restriction
+    operator: eq
+    value: true
+  - field: owner_breach_no_suspend_or_terminate
+    operator: eq
+    value: true
+    logic: or
+  - field: contractor_liable_indirect_loss
+    operator: eq
+    value: true
+    logic: or
+  - field: liability_cap_ratio
+    operator: gt
+    value: 100
+    logic: or
+  - field: liability_cap_undefined
+    operator: eq
+    value: true
+    logic: or
+  - field: performance_penalty_no_cap
+    operator: eq
+    value: true
+    logic: or
+  full_text: '【规则编号】P-C8
+
+    【规则名称】承包商权责风险底线
+
+    【字段】内容
+
+    【制度依据】附件1第2.8条
+
+    【匹配条件】满足以下任一：①无条件禁止承包商**停缓建**权利或停缓建情形下**索赔**权利；②业主违约情况下承包商**无停工权或解约权**；③承包商违约需承担业主**间接损失**；④违约责任上限超过**100%**合同额或**未明确上限**；⑤性能罚款**无上限**
+
+    【制度要求】须制定风险防控措施
+
+    【对应R类规则】R-G1（违约责任上限）、R-G2（停工权/解约权）
+
+    【R类增强】P-C8与R-G1统一采用**100%**合同额为违约责任上限标准；明确**间接损失**条款'
+  suggestion_template: 须制定风险防控措施
+  category: restricted
+  basis: 附件1第2.8条
+  level: high
+- rule_id: P-C9
+  name: 合同转让风险底线
+  department: 法律事务部
+  conditions:
+  - field: owner_transfer_without_consent
+    operator: eq
+    value: true
+  - field: owner_unilateral_termination
+    operator: eq
+    value: true
+    logic: or
+  full_text: '【规则编号】P-C9
+
+    【规则名称】合同转让风险底线
+
+    【字段】内容
+
+    【制度依据】附件1第2.9条
+
+    【匹配条件】业主可**不经承包商同意**转让合同；或业主可**单方面任意终止**合同
+
+    【制度要求】须制定风险防控措施
+
+    【对应R类规则】R-G7（合同转让）
+
+    【R类增强】增加"业主单方任意终止"为R类未覆盖场景'
+  suggestion_template: 须制定风险防控措施
+  category: restricted
+  basis: 附件1第2.9条
+  level: high
+- rule_id: P-D1
+  name: 报送时间要求
+  department: 海外部
+  conditions:
+  - field: days_before_bid_submission
+    operator: lt
+    value: 10
+  full_text: '【规则编号】P-D1
+
+    【规则名称】报送时间要求
+
+    【字段】内容
+
+    【制度依据】第3.3.1.1条
+
+    【匹配条件】向股份公司报送评审申请
+
+    【制度要求】评审申请应至少在投标/签约/作出实质性承诺前**十个工作日**报送
+
+    【对应R类规则】无对应（纯制度规则）
+
+    【备注】不足10个工作日的，须说明原因'
+  suggestion_template: 评审申请应至少在投标/签约/作出实质性承诺前**十个工作日**报送
+  category: mandatory
+  basis: 第3.3.1.1条
+  level: medium
+- rule_id: P-D2
+  name: 内部评审前置与各部门参与
+  department: 海外部
+  conditions:
+  - field: internal_review_completed
+    operator: eq
+    value: false
+  full_text: '【规则编号】P-D2
+
+    【规则名称】内部评审前置与各部门参与
+
+    【字段】内容
+
+    【制度依据】第3.1.1条
+
+    【匹配条件】向股份公司报送评审前
+
+    【制度要求】二级子企业须先完成本单位内部评审，市场、工程、技术、合同、法律、财务、金融、商务、供应链管理等部门应出具评审意见。内部评审记录最终批准人须为二级子企业主要负责人
+
+    【对应R类规则】R-S3（海外部预审）
+
+    【强化条款】如内部评审记录中**无相关部门实质性评审意见、无风险防控措施或存在明显失职失责**，股份公司有权**退回评审申请**，并作为调整准入市场或授权额度的参考'
+  suggestion_template: 二级子企业须先完成本单位内部评审，市场、工程、技术、合同、法律、财务、金融、商务、供应链管理等部门应出具评审意见。内部评审记录最终批准人须为二级子企业主要负责人
+  category: mandatory
+  basis: 第3.1.1条
+  level: high
+- rule_id: P-D3
+  name: 禁止提前做出承诺
+  department: 海外部
+  conditions:
+  - field: premature_commitment
+    operator: eq
+    value: true
+  full_text: '【规则编号】P-D3
+
+    【规则名称】禁止提前做出承诺
+
+    【字段】内容
+
+    【制度依据】第3.1.3条
+
+    【匹配条件】在完成项目评审决策前
+
+    【制度要求】不得对外提供有约束力的投标文件或做出实质性承诺；不得签署有法律约束力的合同文件；不得签署无退出机制或需承担退出责任的合作协议
+
+    【对应R类规则】无对应
+
+    【制度后果】违反此项将触发第5章处罚条款'
+  suggestion_template: 不得对外提供有约束力的投标文件或做出实质性承诺；不得签署有法律约束力的合同文件；不得签署无退出机制或需承担退出责任的合作协议
+  category: mandatory
+  basis: 第3.1.3条
+  level: high
+- rule_id: P-D4
+  name: 报送资料清单
+  department: 海外部
+  conditions:
+  - field: submission_document_complete
+    operator: eq
+    value: false
+  full_text: '【规则编号】P-D4
+
+    【规则名称】报送资料清单
+
+    【字段】内容
+
+    【制度依据】第3.2.2.1条 + 附件2评审资料清单
+
+    【匹配条件】项目报送股份公司评审时
+
+    【制度要求】必须报送14项资料：①项目评审信息汇总表（附件2-2）；②业主资信情况调查表（附件2-3）；③国别市场情况调查表（附件2-4）；④标价汇总及现金流测算表（附件2-5）；⑤投标阶段项目策划主要内容（附件2-6）；⑥内部评审记录（涵盖招投标文件及各类合同文件）；⑦法律意见书（须含价款调整和变更索赔条款风险识别）；⑧招投标文件；⑨拟签约合同文件（合同评审时）；⑩项目合同变化情况及评审意见落实情况说明与承诺（附件2-7）；⑪《对外承包工程项目备案（立项）回执》；⑫内外部联合体协议（如需）；⑬安全评估报告与安保方案（如需，高危/敏感国别）；⑭多边开发银行出资项目报送资料（如需）
+
+    【对应R类规则】R-I4（附件缺失）、R-I6（附件缺失细化）
+
+    【R类增强】P-D4列出制度的完整14项清单，可作为R类附件缺失检查的正式核对依据'
+  suggestion_template: 必须报送14项资料：①项目评审信息汇总表（附件2-2）；②业主资信情况调查表（附件2-3）；③国别市场情况调查表（附件2-4）；④标价汇总及现金流测算表（附件2-5）；⑤投标阶段项目策划主要内容（附件2-6）；⑥内部评审记录（涵盖招投标文件及各类合同文件）；⑦法律意见书（须含价款调整和变更索赔条款风险识别）；⑧招投标文件；⑨拟签约合同文件（合同评审时）；⑩项目合同变化情况及评审意见落实情况说明与承诺（附件2-7）；⑪《对外承包工程项目备案（立项）回执》；⑫内外部联合体协议（如需）；⑬安全评估报告与安保方案（如需，高危/敏感国别）；⑭多边开发银行出资项目报送资料（如需）
+  category: mandatory
+  basis: 第3.2.2.1条 + 附件2评审资料清单
+  level: medium
+- rule_id: P-D5
+  name: 联合体项目报送
+  department: 海外部
+  conditions:
+  - field: joint_venture_internal
+    operator: eq
+    value: true
+  full_text: '【规则编号】P-D5
+
+    【规则名称】联合体项目报送
+
+    【字段】内容
+
+    【制度依据】第3.3.1.2条
+
+    【匹配条件】系统内多家单位以联合体形式共同参与的项目
+
+    【制度要求】各参与单位均应履行内部评审程序；明确一家为牵头方（项目实施主责单位）；适用牵头方授权额度；由牵头方向股份公司报送；评审资料需包括各参与单位的内部评审记录
+
+    【对应R类规则】R-A4（内部联营体牵头方责任）'
+  suggestion_template: 各参与单位均应履行内部评审程序；明确一家为牵头方（项目实施主责单位）；适用牵头方授权额度；由牵头方向股份公司报送；评审资料需包括各参与单位的内部评审记录
+  category: mandatory
+  basis: 第3.3.1.2条
+  level: medium
+- rule_id: P-D6
+  name: 重新报送触发条件
+  department: 海外部
+  conditions:
+  - field: days_since_decision
+    operator: gt
+    value: 365
+  - field: bid_or_signing_entity_changed
+    operator: eq
+    value: true
+    logic: or
+  - field: contract_amount_change_ratio
+    operator: gte
+    value: 20
+    logic: or
+  - field: profit_margin_decline_ratio
+    operator: gte
+    value: 10
+    logic: or
+  - field: cashflow_or_resource_major_change
+    operator: eq
+    value: true
+    logic: or
+  - field: other_adverse_major_change
+    operator: eq
+    value: true
+    logic: or
+  full_text: '【规则编号】P-D6
+
+    【规则名称】重新报送触发条件
+
+    【字段】内容
+
+    【制度依据】第3.3.3.3条
+
+    【匹配条件】评审决策完成后，在最终投标或签约时满足以下任一：①距评审决策完成已超**1年**；②投标或签约主体变更；③合同额较评审阶段变化**20%**及以上；④预期利润率相对下降**10%**及以上；⑤现金流及前期资源投入发生较大变化；⑥发生其他不利于我方的重大变更
+
+    【制度要求】二级子企业应重新报送评审申请，或报送项目合同条件/各项测算指标无不利变化的承诺
+
+    【对应R类规则】R-L2（条件变化的循环报送机制）
+
+    【R类增强】P-D6给出了明确的量化标准（1年/20%/10%）——R-L2仅有定性描述'
+  suggestion_template: 二级子企业应重新报送评审申请，或报送项目合同条件/各项测算指标无不利变化的承诺
+  category: mandatory
+  basis: 第3.3.3.3条
+  level: high
+- rule_id: P-E1
+  name: 项目风险会商部门构成
+  department:
+  - 财务部
+  - 法律事务部
+  - 项目履约管理部
+  conditions:
+  - field: project_requires_consultation
+    operator: eq
+    value: true
+  full_text: '【规则编号】P-E1
+
+    【规则名称】项目风险会商部门构成
+
+    【字段】内容
+
+    【制度依据】第3.3.2.2条
+
+    【匹配条件】股份公司启动项目风险会商
+
+    【制度要求】风险会商部门一般包括：财务资金部、法律事务部、项目履约管理部。承包商负责设计或者涉及关键设计或技术方案的项目，会商科技与设计管理部
+
+    【对应R类规则】R-S4（部门排序规则）
+
+    【重要发现】制度未将**海外部**列为会商部门（海外部是**主办部门**），也未将**金融与专项资产管理部**列为常设会商部门（金融部在4案例中均参与沙特项目）'
+  suggestion_template: 风险会商部门一般包括：财务资金部、法律事务部、项目履约管理部。承包商负责设计或者涉及关键设计或技术方案的项目，会商科技与设计管理部
+  category: baseline
+  basis: 第3.3.2.2条
+  level: medium
+- rule_id: P-E2
+  name: 评审决策流程
+  department: 海外部
+  conditions:
+  - field: review_process_initiated
+    operator: eq
+    value: true
+  full_text: '【规则编号】P-E2
+
+    【规则名称】评审决策流程
+
+    【字段】内容
+
+    【制度依据】第3.3.1~3.3.3条
+
+    【流程】**子企业报送（含内部评审）** → **海外部初审资料**（附件2-1说明） → **相关部门风险会商**（第3.3.2.1条） → **海外部汇总意见反馈申请单位**（第3.3.2.3条） → **申请单位制定落实措施并回函**（第3.3.2.3条） → **海外部形成决策请示+评审意见**（第3.3.3.1条） → **报授权主体决策** → **反馈批示和评审意见**（第3.3.3.2条）
+
+    【对应R类规则】全生命周期规则（R-S/R-R/R-D系列）
+
+    【R类增强】P-E2明确了完整的7步流程，R类生命周期规则（S1-S4）与制度流程一致'
+  suggestion_template: '评审决策流程依据第3.3.1~3.3.3条执行：子企业报送（含内部评审）→海外部初审资料→相关部门风险会商→海外部汇总意见反馈申请单位→申请单位制定落实措施并回函→海外部形成决策请示+评审意见→报授权主体决策→反馈批示和评审意见。
+
+    '
+  category: baseline
+  basis: 第3.3.1~3.3.3条
+  level: medium
+- rule_id: P-E3
+  name: 合同变更评审
+  department: 海外部
+  conditions:
+  - field: contract_change_requires_review
+    operator: eq
+    value: true
+  - field: change_amount_ratio
+    operator: gt
+    value: 5
+    logic: and
+  - field: change_amount_usd
+    operator: gt
+    value: 20000000
+    logic: or
+  - field: change_adverse_terms
+    operator: eq
+    value: true
+    logic: or
+  full_text: '【规则编号】P-E3
+
+    【规则名称】合同变更评审
+
+    【字段】内容
+
+    【制度依据】第3.2.1.3条
+
+    【匹配条件】履约过程中发生合同变更或解除，需签署补充合同等法律文件
+
+    【制度要求】应按照与初始合同**相同的评审程序**办理合同评审
+
+    【例外条款】合同变更金额在初始合同额的**5%**以内且不超过**2000万美元**，且合同条款未发生不利于我方变化的，可由二级子企业评审决策并向股份公司提交说明与承诺
+
+    【对应R类规则】无对应'
+  suggestion_template: 应按照与初始合同**相同的评审程序**办理合同评审
+  category: mandatory
+  basis: 第3.2.1.3条
+  level: high
+- rule_id: P-E4
+  name: 海外部主办职责
+  department: 海外部
+  conditions:
+  - field: project_submitted_to_corporate
+    operator: eq
+    value: true
+  full_text: '【规则编号】P-E4
+
+    【规则名称】海外部主办职责
+
+    【字段】内容
+
+    【制度依据】第3.3.2.1条
+
+    【职责】①初审评审资料齐备性；②结合项目情况提交相关部门会商；③组织项目风险会商；④可邀请专家参与重大复杂项目；⑤可视情召开专题会议；⑥汇总风险会商意见反馈申请单位；⑦形成决策请示文件及评审意见
+
+    【对应R类规则】R-S3（海外部预审）'
+  suggestion_template: '海外部主办职责依据第3.3.2.1条包括：①初审评审资料齐备性；②结合项目情况提交相关部门会商；③组织项目风险会商；④可邀请专家参与重大复杂项目；⑤可视情召开专题会议；⑥汇总风险会商意见反馈申请单位；⑦形成决策请示文件及评审意见。
+
+    '
+  category: baseline
+  basis: 第3.3.2.1条
+  level: medium
+- rule_id: P-E5
+  name: 两阶段评审——投标评审与合同评审独立
+  department: 海外部
+  conditions:
+  - field: procurement_method
+    operator: eq
+    value: bidding
+  full_text: '【规则编号】P-E5
+
+    【规则名称】两阶段评审——投标评审与合同评审独立
+
+    【字段】内容
+
+    【制度依据】第3.2.1.1条
+
+    【匹配条件】招投标项目
+
+    【制度要求】两阶段独立：①投标前完成**投标评审**；②中标后签约前完成**合同评审**。合同评审重点关注投标评审意见的落实情况和信息变化情况
+
+    【对应R类规则】R-L1~R-L3
+
+    【待扩展】规则引擎目前仅覆盖投标评审阶段，合同评审阶段规则尚待从案例中提取'
+  suggestion_template: 两阶段独立：①投标前完成**投标评审**；②中标后签约前完成**合同评审**。合同评审重点关注投标评审意见的落实情况和信息变化情况
+  category: mandatory
+  basis: 第3.2.1.1条
+  level: medium
+- rule_id: P-E6
+  name: 议标项目两阶段合并
+  department: 海外部
+  conditions:
+  - field: procurement_method
+    operator: in
+    value:
+    - negotiation
+    - direct_negotiation
+  full_text: '【规则编号】P-E6
+
+    【规则名称】议标项目两阶段合并
+
+    【字段】内容
+
+    【制度依据】第3.2.1.2条
+
+    【匹配条件】议标或谈判性采购项目
+
+    【制度要求】两阶段评审合并，在签约前直接办理合同评审，评审资料需综合两阶段要求'
+  suggestion_template: 两阶段评审合并，在签约前直接办理合同评审，评审资料需综合两阶段要求
+  category: mandatory
+  basis: 第3.2.1.2条
+  level: medium
+- rule_id: P-H1
+  name: 请示函标题
+  department: 海外部
+  conditions:
+  - field: submission_request_letter
+    operator: eq
+    value: true
+  full_text: '【规则编号】P-H1
+
+    【规则名称】请示函标题
+
+    【字段】内容
+
+    【制度依据】附件2-1第2.1条
+
+    【标准格式】《中建XX公司关于申请股份公司对XX项目投标/XX项目合同进行评审的请示》
+
+    【对应R类规则】R-S1（报送主体）'
+  suggestion_template: '请示函标题标准格式依据附件2-1第2.1条应为：《中建XX公司关于申请股份公司对XX项目投标/XX项目合同进行评审的请示》。
+
+    '
+  category: baseline
+  basis: 附件2-1第2.1条
+  level: low
+- rule_id: P-H2
+  name: 请示函正文八段式结构
+  department: 海外部
+  conditions:
+  - field: submission_request_letter
+    operator: eq
+    value: true
+  full_text: '【规则编号】P-H2
+
+    【规则名称】请示函正文八段式结构
+
+    【字段】内容
+
+    【制度依据】附件2-1第2.2条
+
+    【标准结构】①项目概况（业主/资金来源/规模/模式/工期/投标主体/金额/日期）；②主要合同条件（合同文本/计价/币种/调价机制/预付款/保函/保留金/工期/缺陷期/罚款上限）；③项目实施模式（联营体占比/分工/合作方情况）；④母公司担保情况（是否提供及提供主体）；⑤以股份公司名义承接必要性说明；⑥其他必要情况说明；⑦项目投标/合同合规结论；⑧请示事项
+
+    【对应R类规则】R-S2（请示函五段式）
+
+    【修正】制度要求是**八段式**而非五段式——R-S2需更新'
+  suggestion_template: '请示函正文标准结构依据附件2-1第2.2条应为八段式：①项目概况（业主/资金来源/规模/模式/工期/投标主体/金额/日期）；②主要合同条件（合同文本/计价/币种/调价机制/预付款/保函/保留金/工期/缺陷期/罚款上限）；③项目实施模式（联营体占比/分工/合作方情况）；④母公司担保情况（是否提供及提供主体）；⑤以股份公司名义承接必要性说明；⑥其他必要情况说明；⑦项目投标/合同合规结论；⑧请示事项。
+
+    '
+  category: baseline
+  basis: 附件2-1第2.2条
+  level: low
+- rule_id: P-H3
+  name: 法律意见书特殊要求
+  department: 法律事务部
+  conditions:
+  - field: legal_opinion_submitted
+    operator: eq
+    value: true
+  full_text: '【规则编号】P-H3
+
+    【规则名称】法律意见书特殊要求
+
+    【字段】内容
+
+    【制度依据】附件2评审资料清单第7项
+
+    【匹配条件】报送法律意见书
+
+    【制度要求】法律意见书须包含**价款调整和变更索赔**相关条款的风险识别及应对措施
+
+    【对应R类规则】无对应（规则引擎未检查法律意见书内容完整性）'
+  suggestion_template: 法律意见书须包含**价款调整和变更索赔**相关条款的风险识别及应对措施
+  category: mandatory
+  basis: 附件2评审资料清单第7项
+  level: medium

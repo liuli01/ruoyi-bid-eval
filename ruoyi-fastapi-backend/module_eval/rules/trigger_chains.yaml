@@ -1,0 +1,114 @@
+# Trigger chains: when a rule triggers, automatically trigger / suppress / escalate other rules.
+# Conditional chains include an optional `condition` that checks project features or
+# already-triggered opinions before applying the chain action.
+
+chains:
+  # 1. F-R7 -> F-R6 (双重扣款 -> 现金流+保函替换保留金)
+  - chain_id: "CHAIN-001"
+    trigger: "F-R7"
+    action: "trigger"
+    target: "F-R6"
+    reason: "F-R7触发时，F-R6的相关条款（现金流测算、保函替换保留金）也需要关注"
+    condition: null
+
+  # 2. R-C1 -> R-C2 (母公司担保 -> 融资担保)
+  - chain_id: "CHAIN-002"
+    trigger: "R-C1"
+    action: "trigger"
+    target: "R-C2"
+    reason: "发现母公司担保要求后，需同步检查项目融资担保条款"
+    condition:
+      type: "keyword_in_raw_text"
+      keywords:
+        - "融资"
+        - "Financing"
+        - "资金"
+        - "增信"
+        - "还款"
+
+  # 3. R-B1 -> R-B6 (保函自动延期 -> 保函权益转让)
+  - chain_id: "CHAIN-003"
+    trigger: "R-B1"
+    action: "trigger"
+    target: "R-B6"
+    reason: "R-B1触发且内容含'转让'时，需同步关注保函权益转让条款"
+    condition:
+      type: "keyword_in_trigger_content"
+      keywords:
+        - "转让"
+        - "权益转让"
+        - "可转让给第三方"
+
+  # 4. P-C5 -> R-E1 (价格风险 -> 设计责任划分)
+  - chain_id: "CHAIN-004"
+    trigger: "P-C5"
+    action: "trigger"
+    target: "R-E1"
+    reason: "合同额触及价格风险底线（业主设计+固定总价）时，必须评估设计责任归属"
+
+  # 5. [已删除] v3.0 彻底删除 D 类兜底规则
+
+  # 6. P-C4 -> R-D1 (工期风险底线 -> 重复罚款)
+  - chain_id: "CHAIN-006"
+    trigger: "P-C4"
+    action: "trigger"
+    target: "R-D1"
+    reason: "P-C4触发时（误期罚款超限），需同步检查是否存在里程碑与总工期重复罚款"
+
+  # 5. R-D1 -> R-D3 (误期违约金 -> 阶段性罚款退还)
+  - chain_id: "CHAIN-005"
+    trigger: "R-D1"
+    action: "trigger"
+    target: "R-D3"
+    reason: "误期违约金触发时，需同步检查是否存在阶段性罚款退还机制"
+
+  # 7. R-A3 -> R-C1 (外部联营体 -> 母公司担保)
+  - chain_id: "CHAIN-007"
+    trigger: "R-A3"
+    action: "trigger"
+    target: "R-C1"
+    reason: "外部联营体场景下，需确认是否被要求提供母公司担保，并明确拒绝"
+
+  # 8. F-R3 -> F-R1 (垫资风险 -> IPC支付周期)
+  - chain_id: "CHAIN-008"
+    trigger: "F-R3"
+    action: "trigger"
+    target: "F-R1"
+    reason: "大额垫资风险触发时，需同步评估进度款支付周期对现金流的叠加影响"
+
+  # 9. R-G4 -> R-I2 (不可预见条件 -> 地质风险)
+  - chain_id: "CHAIN-009"
+    trigger: "R-G4"
+    action: "trigger"
+    target: "R-I2"
+    reason: "不可预见物质条件条款触发时，需同步关注地质/地下工程风险"
+
+  # 10. R-H7 -> R-H3 (项目实施重难点 -> 技术方案评审)
+  - chain_id: "CHAIN-010"
+    trigger: "R-H7"
+    action: "trigger"
+    target: "R-H3"
+    reason: "项目重难点分析触发时，需同步联动设计专家做好关键技术方案比选"
+
+# D类兜底规则: 当某部门没有触发任何规则时，添加通用提示
+fallback_rules:
+  - rule_id: "D-F1"
+    name: "通用财务风险提示"
+    department: "财务部"
+    condition: "opinion_count < 1"
+    suggestion_template: "建议财务部关注项目财务结构合理性，评估合同价格条件、支付条款及现金流安排对项目履约的影响。"
+    level: "low"
+
+  - rule_id: "D-L1"
+    name: "通用法律风险提示"
+    department: "法律事务部"
+    condition: "opinion_count < 1"
+    suggestion_template: "建议法律事务部关注合同条款的合法合规性，重点审查承包商权利义务平衡、违约责任上限、争议解决机制等核心条款。"
+    level: "low"
+
+  - rule_id: "D-O1"
+    name: "通用海外管理提示"
+    department: "海外部"
+    condition: "opinion_count < 1"
+    suggestion_template: "建议海外部关注项目实施可行性，评估当地政治经济环境、资源供应、许可办理及项目班子配置等管理要素。"
+    level: "low"
