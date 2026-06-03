@@ -17,7 +17,7 @@ from common.aspect.pre_auth import CurrentUserDependency, PreAuthDependency
 from common.enums import BusinessType
 from common.router import APIRouterPro
 from common.vo import DataResponseModel, PageResponseModel, ResponseBaseModel
-from module_eval.entity.do.eval_do import EvalProject
+from module_eval.entity.do.eval_do import EvalProject, EvalReview
 from module_eval.entity.vo.eval_vo import (
     EvalProjectModel, EvalProjectPageQuery, EvalReviewModel,
     EvalOpinionModel, StartReviewModel,
@@ -31,6 +31,52 @@ from module_admin.entity.vo.user_vo import CurrentUserModel
 eval_controller = APIRouterPro(
     prefix='/eval', order_num=20, tags=['评审管理'], dependencies=[PreAuthDependency()]
 )
+
+
+@eval_controller.get(
+    '/dashboard',
+    summary='Dashboard统计',
+    description='评审系统首页统计概览',
+)
+async def dashboard(
+    request: Request,
+    query_db: Annotated[AsyncSession, DBSessionDependency()],
+) -> Response:
+    """Dashboard 统计接口"""
+    from sqlalchemy import select, func, desc
+
+    # 项目统计
+    total_projects = (await query_db.execute(select(func.count()).select_from(EvalProject))).scalar() or 0
+    running_reviews = (await query_db.execute(
+        select(func.count()).select_from(EvalReview).where(EvalReview.status == 'running')
+    )).scalar() or 0
+    done_reviews = (await query_db.execute(
+        select(func.count()).select_from(EvalReview).where(EvalReview.status == 'done')
+    )).scalar() or 0
+
+    # 最近评审
+    recent_rows = (await query_db.execute(
+        select(EvalReview).order_by(desc(EvalReview.create_time)).limit(5)
+    )).scalars().all()
+
+    # 项目状态分布
+    status_counts = {}
+    for s in ('pending', 'running', 'completed', 'failed'):
+        cnt = (await query_db.execute(
+            select(func.count()).select_from(EvalProject).where(EvalProject.status == s)
+        )).scalar() or 0
+        status_counts[s] = cnt
+
+    from utils.common_util import CamelCaseUtil
+    recent = [CamelCaseUtil.transform_result(r) for r in recent_rows]
+
+    return ResponseUtil.success(data={
+        'totalProjects': total_projects,
+        'runningReviews': running_reviews,
+        'doneReviews': done_reviews,
+        'projectStatusDistribution': status_counts,
+        'recentReviews': recent,
+    })
 
 
 @eval_controller.get(
@@ -205,7 +251,6 @@ async def get_project_reviews(
     """项目评审历史"""
     from module_eval.dao.eval_dao import EvalReviewDao
     from module_eval.entity.vo.eval_vo import EvalReviewModel
-    from module_eval.entity.do.eval_do import EvalReview
     from sqlalchemy import desc, select
 
     result = await query_db.execute(
