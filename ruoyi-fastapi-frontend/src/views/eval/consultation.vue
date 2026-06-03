@@ -18,6 +18,10 @@
               <el-descriptions-item label="核稿意见" :span="2">{{ detail.officeOpinion || '-' }}</el-descriptions-item>
             </el-descriptions>
             <el-button type="text" icon="Upload" @click="uploadFiles(detail.projectId)" style="margin-top:8px">上传材料</el-button>
+            <el-button type="text" icon="CircleCheck" @click="checkMaterials(detail.id)" style="margin-top:8px">完整性核验</el-button>
+            <div v-if="checkResult" style="margin-top:8px">
+              <el-tag v-for="c in checkResult.checks" :key="c.name" :type="c.found?'success':'danger'" size="small" style="margin-right:4px">{{ c.name }}:{{ c.found?'✅':'❌' }}</el-tag>
+            </div>
             <div v-if="detail.draftDoc" style="margin-top:8px">
               <h4>发函草稿</h4>
               <pre style="background:#f5f7fa;padding:12px;white-space:pre-wrap">{{ detail.draftDoc }}</pre>
@@ -75,9 +79,11 @@
 import { ref, onMounted } from 'vue'
 import { listConsultation, createConsultation, getConsultation, approveConsultation } from '@/api/eval/portal'
 import { useRouter } from 'vue-router'
+import request from '@/utils/request'
 
 const router = useRouter()
 const list = ref([])
+const checkResult = ref(null)
 const detail = ref(null)
 const loading = ref(false)
 const createOpen = ref(false)
@@ -116,6 +122,10 @@ async function submitCreate() {
   await createConsultation(form.value); createOpen.value = false; getList()
 }
 function uploadFiles(pid) { router.push(`/eval/project?projectId=${pid}`) }
+async function checkMaterials(id) {
+  const r = await request({ url: `/portal/consultation/${id}/check-materials`, method: 'get' })
+  checkResult.value = r.data || r
+}
 async function getList() {
   loading.value = true; const r = await listConsultation()
   list.value = r.data || r || []; loading.value = false

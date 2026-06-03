@@ -3,6 +3,7 @@ import json
 from datetime import datetime
 from typing import Annotated, Any
 from fastapi import Body, Request
+from fastapi.responses import JSONResponse
 from sqlalchemy import desc, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -293,6 +294,99 @@ async def llm_check_yiyi(yiyi_id: int, query_db: Annotated[AsyncSession, DBSessi
         {'json': json.dumps(result, ensure_ascii=False), 'st': new_status, 'id': yiyi_id}
     )
     await query_db.commit()
+    return ResponseUtil.success(data=result)
+
+
+@portal_controller.get('/consultation/{consult_id}/check-materials')
+async def check_consultation_materials(consult_id: int, query_db: Annotated[AsyncSession, DBSessionDependency()]):
+    """会商材料完整性核验"""
+    from sqlalchemy import text
+    c = (await query_db.execute(select(EvalConsultation).where(EvalConsultation.id == consult_id))).scalars().first()
+    if not c: return JSONResponse(content={'code':404,'msg':'不存在'})
+
+    # 必备材料清单
+    required = ['请示函', '国别报告', '评审记录', '项目可行性报告', '法律意见书']
+    # 查询已上传材料
+    mats = (await query_db.execute(
+        text("SELECT file_name, category FROM eval_material WHERE project_id=:pid AND parse_status='done'"), {'pid': c.project_id}
+    )).fetchall()
+    uploaded_cats = {m.category for m in mats}
+    uploaded_names = {m.file_name for m in mats}
+
+    results = []
+    for item in required:
+        found = item in uploaded_cats or any(item in n for n in uploaded_names)
+        results.append({'name': item, 'found': found})
+
+    return ResponseUtil.success(data={'checks': results, 'all_found': all(r['found'] for r in results), 'total': len(results), 'found_count': sum(1 for r in results if r['found'])})
+
+
+@portal_controller.post('/f3/parse-reply')
+async def parse_reply(body: Annotated[dict, Body()], query_db: Annotated[AsyncSession, DBSessionDependency()]):
+    """F3 回复函解析 — LLM 读取子企业回复函内容"""
+    project_id = body.get('projectId', 0)
+    review_id = body.get('reviewId', 0)
+
+    # 查找回复函材料
+    from sqlalchemy import text
+    from module_eval.entity.do.eval_do import EvalMaterial
+    mats = (await query_db.execute(
+        select(EvalMaterial).where(EvalMaterial.project_id == project_id, EvalMaterial.category == '回复函')
+    )).scalars().all()
+    if not mats:
+        # 找所有材料
+        mats = (await query_db.execute(
+            select(EvalMaterial).where(EvalMaterial.project_id == project_id, EvalMaterial.parse_status == 'done').order_by(EvalMaterial.material_id)
+        )).scalars().all()
+
+    if not mats:
+        return JSONResponse(content={'code':404,'msg':'未找到材料'})
+
+    combined = '\n\n'.join([f"--- {m.file_name} ---\n{(m.text_content or '')[:3000]}" for m in mats])
+
+    # 读取评审意见（如果有）
+    opinions_text = ''
+    if review_id:
+        from module_eval.dao.eval_dao import EvalOpinionDao
+        ops = await EvalOpinionDao.get_opinions_by_review(query_db, review_id)
+        if ops:
+            opinions_text = '\n'.join([f"- {o.rule_id}: {o.title}" for o in ops[:10]])
+
+    # 调用 LLM 分析
+    from module_eval.service.eval_llm_client import EvalLlmClient
+    prompt = f"""你是海外项目评审专家。以下是一份子企业对会商意见的回复函材料，请分析：
+
+1. 对每条会商意见，子企业是否做出了明确回应？
+2. 回应的类型是以下哪种？
+   - R-T1: 完全接受（承诺按要求执行）
+   - R-T2: 部分接受（接受但附带条件/说明）
+   - R-T3: 不接受（拒绝执行）
+   - R-T4: 已执行（已完成相关要求）
+   - R-T5: 提供说明（澄清事实或补充信息）
+   - R-T6: 未明确回应（语焉不详）
+
+3. 总体判断：是否建议通过？
+
+会商意见摘要：
+{opinions_text or '(无)'}
+
+子企业回复函材料：
+{combined[:8000]}
+
+输出 JSON：
+{{"items":[{{"opinion":"会商意见描述","response":"子企业回应摘要","rt_type":"R-T1","confidence":0.9}}], "summary":"总评","recommend":"通过/不通过/需补充"}}
+"""
+    try:
+        resp = EvalLlmClient.call_llm_sync([
+            {'role':'system','content':'你是海外项目评审专家。输出JSON。'},
+            {'role':'user','content':prompt},
+        ])
+        import re
+        m = re.search(r'\{.*\}', resp, re.DOTALL)
+        result = json.loads(m.group(0)) if m else {'raw': resp[:500]}
+    except Exception as e:
+        result = {'error': str(e)[:200]}
+
     return ResponseUtil.success(data=result)
 
 
