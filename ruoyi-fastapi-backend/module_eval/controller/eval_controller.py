@@ -2,6 +2,7 @@
 import json
 import os
 from datetime import datetime
+from pathlib import Path as FilePath
 from typing import Annotated
 
 from fastapi import Path, Query, Request, Response, UploadFile, File, Form
@@ -77,6 +78,45 @@ async def dashboard(
         'projectStatusDistribution': status_counts,
         'recentReviews': recent,
     })
+
+
+@eval_controller.get(
+    '/rules',
+    summary='规则列表',
+    description='获取 P 类 / R 类规则列表',
+)
+async def get_rules(
+    request: Request,
+    rule_type: Annotated[str, Query(description='p/r/all')] = 'all',
+    level: Annotated[str, Query(description='high/medium/low')] = '',
+    keyword: Annotated[str, Query(description='搜索规则名或ID')] = '',
+) -> Response:
+    """从 YAML 读取规则列表"""
+    import yaml
+    rules_dir = FilePath(__file__).resolve().parent.parent / 'rules'
+    all_rules = []
+    files = []
+    if rule_type in ('all', 'p'):
+        files.append(('P', rules_dir / 'p_rules.yaml'))
+    if rule_type in ('all', 'r'):
+        files.append(('R', rules_dir / 'r_rules.yaml'))
+
+    for rtype, fp in files:
+        if fp.exists():
+            with open(fp, encoding='utf-8') as f:
+                data = yaml.safe_load(f) or []
+                for r in data:
+                    r['_type'] = rtype
+                    all_rules.append(r)
+
+    # 筛选
+    if level:
+        all_rules = [r for r in all_rules if r.get('level') == level]
+    if keyword:
+        kw = keyword.lower()
+        all_rules = [r for r in all_rules if kw in r.get('rule_id', '').lower() or kw in r.get('name', '').lower()]
+
+    return ResponseUtil.success(data=all_rules)
 
 
 @eval_controller.get(
