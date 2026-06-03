@@ -164,6 +164,34 @@ async def llm_status(request: Request) -> Response:
 
 
 @eval_controller.get(
+    '/review/list',
+    summary='评审列表',
+    description='获取所有评审记录分页列表',
+    dependencies=[UserInterfaceAuthDependency('eval:review:query')],
+)
+async def get_review_list(
+    request: Request,
+    query_db: Annotated[AsyncSession, DBSessionDependency()],
+    page_num: Annotated[int, Query()] = 1,
+    page_size: Annotated[int, Query()] = 10,
+    project_id: Annotated[int, Query(description='项目ID（可选筛选）')] = None,
+) -> Response:
+    """全量评审记录分页列表"""
+    from module_eval.dao.eval_dao import EvalReviewDao
+    from module_eval.entity.do.eval_do import EvalReview
+    from sqlalchemy import desc, select
+    from utils.page_util import PageUtil
+    from sqlalchemy import ColumnElement
+
+    query = select(EvalReview).order_by(desc(EvalReview.create_time))
+    if project_id:
+        query = query.where(EvalReview.project_id == project_id)
+
+    result = await PageUtil.paginate(query_db, query, page_num, page_size, is_page=True)
+    return ResponseUtil.success(model_content=result)
+
+
+@eval_controller.get(
     '/project/{project_id}/reviews',
     summary='评审历史',
     description='获取项目的所有评审记录',
