@@ -1,0 +1,15 @@
+{
+  "name": "ruoyi-bid-eval",
+  "version": "1.0.0",
+  "description": "<h1 align=\"center\">\r     <img alt=\"logo\" src=\"https://oscimg.oschina.net/oscnet/up-d3d0a9303e11d522a06cd263f3079027715.png\">\r </h1>\r <h1 align=\"center\" style=\"margin: 30px 0 30px; font-weight: bold;\">RuoYi-Vue3-FastAPI</h1>\r <h4 align=\"center\">基于RuoYi-Vue3+FastAPI前后端分离的快速开发框架</h4>\r <p align=\"center\">\r     <a href=\"https://gitee.com/insistence2022/RuoYi-Vue3-FastAPI/stargazers\">\r         <img alt=\"Gitee\" src=\"https://gitee.com/insistence2022/RuoYi-Vue3-FastAPI/badge/star.svg?theme=dark\">\r     </a>\r     <a href=\"https://github.com/insistence/RuoYi-Vue3-FastAPI\">\r         <img alt=\"Github\" src=\"https://img.shields.io/github/stars/insistence/RuoYi-Vue3-FastAPI?style=social\">\r     </a>\r     <a href=\"https://github.com/insistence/RuoYi-Vue3-FastAPI/actions?query=branch%3Amaster+event%3Apush+workflow%3A%22%22Playwright+Tests%22%22\">\r         <img alt=\"Playwright Tests\" src=\"https://github.com/insistence/RuoYi-Vue3-FastAPI/workflows/Playwright Tests/badge.svg\">\r     </a>\r     <a href=\"https://github.com/insistence/RuoYi-Vue3-FastAPI/actions?query=branch%3Amaster+event%3Apush+workflow%3A%22%22Ruff+Check%22%22\">\r         <img alt=\"Ruff Check\" src=\"https://github.com/insistence/RuoYi-Vue3-FastAPI/workflows/Ruff Check/badge.svg\">\r     </a>\r     <a href=\"https://gitee.com/insistence2022/RuoYi-Vue3-FastAPI\">\r         <img alt=\"project version\" src=\"https://img.shields.io/badge/version-1.9.0-brightgreen.svg\">\r     </a>\r     <a href=\"https://github.com/astral-sh/ruff\">\r         <img alt=\"Ruff\" src=\"https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json\">\r     </a>\r     <a href=\"https://gitee.com/insistence2022/RuoYi-Vue3-FastAPI/blob/master/LICENSE\">\r         <img alt=\"LICENSE\" src=\"https://img.shields.io/github/license/mashape/apistatus.svg\">\r     </a>\r     <img alt=\"node version\" src=\"https://img.shields.io/badge/node-≥18-blue\">\r     <img alt=\"python version\" src=\"https://img.shields.io/badge/python-≥3.10-blue\">\r     <img alt=\"mysql version\" src=\"https://img.shields.io/badge/MySQL-≥5.7-blue\">\r     <img alt=\"redis version\" src=\"https://img.shields.io/badge/redis-≥6.2-blue\">\r </p>",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "playwright": "^1.60.0"
+  }
+}
