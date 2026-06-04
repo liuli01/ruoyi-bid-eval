@@ -154,3 +154,4 @@ cython_debug/
 .trae/
 .env.dev
 node_modules/
+package-lock.json
