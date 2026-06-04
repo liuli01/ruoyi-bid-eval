@@ -1,75 +1,112 @@
+# ============================================
+# RuoYi-Bid-Eval 生产部署（Portainer 适用）
+# 使用方式：
+#   1. 在 Portainer 中创建 Stack
+#   2. 粘贴本文件内容
+#   3. 添加环境变量 DS_API_KEY
+#   4. 部署
+# ============================================
+
 version: '3.8'
 
 services:
+  # ---- MySQL ----
   mysql:
     image: mysql:8.0
+    container_name: bid-eval-mysql
     environment:
-      MYSQL_ROOT_PASSWORD: mysqlroot
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-mysqlroot}
       MYSQL_DATABASE: bid_eval_v2
       TZ: Asia/Shanghai
-    ports:
-      - "3306:3306"
+    expose:
+      - "3306"
     volumes:
       - mysql_data:/var/lib/mysql
-      # 以下按文件名排序自动执行（00 → 99）
-      - ./ruoyi-fastapi-backend/sql/ruoyi-fastapi.sql:/docker-entrypoint-initdb.d/00-ruoyi-fastapi.sql:ro
-      - ./ruoyi-fastapi-backend/sql/eval_init.sql:/docker-entrypoint-initdb.d/01-eval.sql:ro
-      - ./ruoyi-fastapi-backend/sql/portal_init.sql:/docker-entrypoint-initdb.d/02-portal.sql:ro
-      - ./ruoyi-fastapi-backend/sql/seed_projects.sql:/docker-entrypoint-initdb.d/03-seed_projects.sql:ro
-      - ./ruoyi-fastapi-backend/sql/seed_opinions.sql:/docker-entrypoint-initdb.d/04-seed_opinions.sql:ro
-    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --sql-mode="" --default-time-zone='+08:00'
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --sql-mode=""
+      --default-time-zone='+08:00'
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pmysqlroot"]
-      interval: 10s
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD:-mysqlroot}"]
+      interval: 15s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 60s
+    restart: unless-stopped
+    networks:
+      - bid-eval-net
 
+  # ---- Redis ----
   redis:
     image: redis:7-alpine
-    ports:
-      - "6379:6379"
+    container_name: bid-eval-redis
+    expose:
+      - "6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
+      interval: 15s
       timeout: 3s
-      retries: 3
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - bid-eval-net
 
+  # ---- 后端 ----
   backend:
     build:
       context: ruoyi-fastapi-backend
-    image: ghcr.io/${GITHUB_REPOSITORY:-ruoyi-bid-eval}-backend:latest
+    image: ghcr.io/${GITHUB_REPOSITORY:-ruoyi-bid-eval}-backend:${IMAGE_TAG:-latest}
+    container_name: bid-eval-backend
+    expose:
+      - "9100"
     ports:
-      - "9100:9100"
+      - "${API_PORT:-9100}:9100"
     environment:
       APP_PORT: 9100
+      APP_ROOT_PATH: /dev-api
       DB_HOST: mysql
       DB_PORT: 3306
       DB_USERNAME: root
-      DB_PASSWORD: mysqlroot
+      DB_PASSWORD: ${DB_PASSWORD:-mysqlroot}
       DB_DATABASE: bid_eval_v2
       REDIS_HOST: redis
       REDIS_PORT: 6379
       DS_API_KEY: ${DS_API_KEY:-}
-      DS_API_BASE: https://api.deepseek.com
-      DS_MODEL: deepseek-chat
+      DS_API_BASE: ${DS_API_BASE:-https://api.deepseek.com}
+      DS_MODEL: ${DS_MODEL:-deepseek-chat}
+      APP_RELOAD: "false"
+      APP_DEMO_MODE: ${APP_DEMO_MODE:-false}
     depends_on:
       mysql:
         condition: service_healthy
       redis:
         condition: service_healthy
     restart: unless-stopped
+    networks:
+      - bid-eval-net
 
+  # ---- 前端 ----
   frontend:
     build:
       context: ruoyi-fastapi-frontend
       args:
         VITE_APP_ENV: production
-    image: ghcr.io/${GITHUB_REPOSITORY:-ruoyi-bid-eval}-frontend:latest
+    image: ghcr.io/${GITHUB_REPOSITORY:-ruoyi-bid-eval}-frontend:${IMAGE_TAG:-latest}
+    container_name: bid-eval-frontend
     ports:
-      - "80:80"
+      - "${WEB_PORT:-80}:80"
     depends_on:
       - backend
     restart: unless-stopped
+    networks:
+      - bid-eval-net
 
 volumes:
   mysql_data:
+    name: bid-eval-mysql-data
+
+networks:
+  bid-eval-net:
+    name: bid-eval-network
+    driver: bridge

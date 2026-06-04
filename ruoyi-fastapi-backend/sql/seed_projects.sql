@@ -2,6 +2,27 @@
 -- 项目来源: os-bid-eval-web/test_cases.json
 
 -- ----------------------------
+-- 国别字典表（SQLAlchemy 自动建表，此处兜底）
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS eval_country_dict (
+    id BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+    country_name VARCHAR(100) NOT NULL COMMENT '国别名称',
+    country_code VARCHAR(10) NOT NULL COMMENT '国别代码',
+    region VARCHAR(50) DEFAULT '' COMMENT '区域',
+    risk_level VARCHAR(20) DEFAULT 'medium' COMMENT '风险等级',
+    political_system VARCHAR(50) DEFAULT '' COMMENT '政治体制',
+    election_cycle VARCHAR(50) DEFAULT '' COMMENT '选举周期',
+    sort_order INT DEFAULT NULL COMMENT '排序',
+    status VARCHAR(1) DEFAULT '0' COMMENT '状态',
+    create_by VARCHAR(64) DEFAULT '' COMMENT '创建者',
+    create_time DATETIME DEFAULT NULL COMMENT '创建时间',
+    update_by VARCHAR(64) DEFAULT '' COMMENT '更新者',
+    update_time DATETIME DEFAULT NULL COMMENT '更新时间',
+    remark VARCHAR(500) DEFAULT '' COMMENT '备注',
+    PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='国别字典表';
+
+-- ----------------------------
 -- 国别字典数据（31 个常用海外工程国别）
 -- ----------------------------
 REPLACE INTO eval_country_dict(id, country_name, country_code, region, risk_level, political_system, election_cycle, sort_order, status, create_by, create_time) VALUES
