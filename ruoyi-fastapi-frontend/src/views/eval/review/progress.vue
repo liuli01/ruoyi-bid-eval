@@ -71,7 +71,7 @@
 
 <script setup name="ReviewProgress">
 import { useRoute, useRouter } from 'vue-router'
-import { startReview, getReview, getReviewOpinions } from '@/api/eval/review'
+import { startReview as startReviewApi, getReview, getReviewOpinions } from '@/api/eval/review'
 
 const route = useRoute()
 const router = useRouter()
@@ -166,7 +166,7 @@ async function startReview() {
   }
   starting.value = true
   try {
-    const r = await startReview({ projectId: projectId.value, reviewMode: 'standard' })
+    const r = await startReviewApi({ projectId: projectId.value, reviewMode: 'standard' })
     const d = r.data || r
     if (d.review_id || d.reviewId) {
       const rid = d.review_id || d.reviewId

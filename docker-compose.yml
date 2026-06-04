@@ -5,14 +5,19 @@ services:
     image: mysql:8.0
     environment:
       MYSQL_ROOT_PASSWORD: mysqlroot
-      MYSQL_DATABASE: bid_eval
+      MYSQL_DATABASE: bid_eval_v2
+      TZ: Asia/Shanghai
     ports:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./sql/eval_init.sql:/docker-entrypoint-initdb.d/01-eval.sql:ro
-      - ./sql/portal_init.sql:/docker-entrypoint-initdb.d/02-portal.sql:ro
-    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --sql-mode=""
+      # 以下按文件名排序自动执行（00 → 99）
+      - ./ruoyi-fastapi-backend/sql/ruoyi-fastapi.sql:/docker-entrypoint-initdb.d/00-ruoyi-fastapi.sql:ro
+      - ./ruoyi-fastapi-backend/sql/eval_init.sql:/docker-entrypoint-initdb.d/01-eval.sql:ro
+      - ./ruoyi-fastapi-backend/sql/portal_init.sql:/docker-entrypoint-initdb.d/02-portal.sql:ro
+      - ./ruoyi-fastapi-backend/sql/seed_projects.sql:/docker-entrypoint-initdb.d/03-seed_projects.sql:ro
+      - ./ruoyi-fastapi-backend/sql/seed_opinions.sql:/docker-entrypoint-initdb.d/04-seed_opinions.sql:ro
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --sql-mode="" --default-time-zone='+08:00'
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pmysqlroot"]
       interval: 10s
@@ -41,7 +46,7 @@ services:
       DB_PORT: 3306
       DB_USERNAME: root
       DB_PASSWORD: mysqlroot
-      DB_DATABASE: bid_eval
+      DB_DATABASE: bid_eval_v2
       REDIS_HOST: redis
       REDIS_PORT: 6379
       DS_API_KEY: ${DS_API_KEY:-}

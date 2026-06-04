@@ -7,7 +7,7 @@ from typing import Annotated
 
 from fastapi import Body, Path, Query, Request, Response, UploadFile, File, Form
 from fastapi.responses import JSONResponse
-from sqlalchemy import ColumnElement
+from sqlalchemy import ColumnElement, select, func, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from common.annotation.log_annotation import Log
@@ -44,7 +44,6 @@ async def dashboard(
     query_db: Annotated[AsyncSession, DBSessionDependency()],
 ) -> Response:
     """Dashboard 统计接口"""
-    from sqlalchemy import select, func, desc
 
     # 项目统计
     total_projects = (await query_db.execute(select(func.count()).select_from(EvalProject))).scalar() or 0
@@ -105,7 +104,7 @@ async def get_settings(
 
     return ResponseUtil.success(data={
         'reviewMode': configs.get('review_mode', 'standard'),
-        'llmConcurrency': int(configs.get('llm_concurrency', '5')),
+        'llmConcurrency': int(configs.get('llm_concurrency') or '5'),
         'llmModel': configs.get('llm_model', os.environ.get('DS_MODEL', 'deepseek-chat')),
         'llmBaseUrl': configs.get('llm_base_url', os.environ.get('DS_API_BASE', 'https://api.deepseek.com')),
         'llmConfigured': bool(os.environ.get('DS_API_KEY', '')),

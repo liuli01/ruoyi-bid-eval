@@ -58,6 +58,10 @@ const usePermissionStore = defineStore(
 // 遍历后台传来的路由字符串，转换为组件对象
 function filterAsyncRouter(asyncRouterMap, lastRouter = false, type = false) {
   return asyncRouterMap.filter(route => {
+    // 仅在顶层路由补 /（子路由用相对路径，让 vue-router 自动拼接）
+    if (!lastRouter && route.path && !route.path.startsWith('/')) {
+      route.path = '/' + route.path
+    }
     if (type && route.children) {
       route.children = filterChildren(route.children)
     }

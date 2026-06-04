@@ -39,3 +39,10 @@ dependencies = [
 
 [tool.setuptools.packages.find]
 include = ["module_eval*", "module_admin*", "module_ai*"]
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "pytest>=9.0.3",
+    "pytest-asyncio>=1.4.0",
+]

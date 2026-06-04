@@ -201,3 +201,83 @@ git push origin v1.0.0
 - 前端需构建静态文件部署：`npm run build:docker`
 - Nginx 需配置 `/docker-api` 代理到后端 `:9100`（参见 `nginx.conf`）
 - 数据库连接池参数按服务器规格调整（`DB_POOL_SIZE`/`DB_MAX_OVERFLOW`）
+
+### 数据库编码
+
+- **创建数据库**时务必指定 `utf8mb4` 字符集：
+  ```sql
+  CREATE DATABASE bid_eval DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+  ```
+- **导入 SQL** 时使用 `--default-character-set=utf8mb4`：
+  ```bash
+  mysql --default-character-set=utf8mb4 bid_eval < init.sql
+  ```
+- **后端连接 URL** 需加 `?charset=utf8mb4`（已配置在 `config/database.py`）：
+  ```
+  mysql+asyncmy://user:pass@host:3306/bid_eval?charset=utf8mb4
+  ```
+- 否则中文会以 Latin-1 编码写入数据库，导致 **双编码乱码**（`ç®¡ç†å‘˜` 之类）
+
+### 时区
+
+- MySQL 容器默认时区为 UTC，需改为东八区：
+  ```sql
+  SET GLOBAL time_zone = '+08:00';
+  ```
+- 或在 `docker-compose.yml` 的 MySQL 服务中加入：
+  ```yaml
+  environment:
+    - TZ=Asia/Shanghai
+  ```
+- 后端时区由 Python 运行时决定，Linux 服务器可用 `timedatectl set-timezone Asia/Shanghai`
+
+### 重新部署复原指南
+
+重新初始化数据库后按以下步骤复原：
+
+**1. 数据库初始化（顺序不能错）**
+```bash
+# 创建数据库
+CREATE DATABASE bid_eval_v2 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+# 导入 SQL
+mysql --default-character-set=utf8mb4 bid_eval_v2 < sql/ruoyi-fastapi.sql     # ① 基础表
+mysql --default-character-set=utf8mb4 bid_eval_v2 < sql/eval_init.sql         # ② 业务表+菜单+用户
+mysql --default-character-set=utf8mb4 bid_eval_v2 < sql/seed_projects.sql     # ③ 国别+项目（可选）
+mysql --default-character-set=utf8mb4 bid_eval_v2 < sql/seed_opinions.sql     # ④ 评审意见（可选）
+
+# 关闭验证码 + 设置时区
+mysql bid_eval_v2 -e "UPDATE sys_config SET config_value='false' WHERE config_key='sys.account.captchaEnabled'; SET GLOBAL time_zone='+08:00';"
+```
+
+**2. 后端配置**
+```bash
+# .env.dev 中的数据库名（后端加载的是 .env.dev 不是 .env）
+DB_DATABASE = 'bid_eval_v2'
+
+# 连接 URL 已加 charset（config/database.py）
+# mysql+asyncmy://user:pass@host:3306/bid_eval_v2?charset=utf8mb4
+```
+
+**3. 前端已修改的文件**（重新部署时不要覆盖）
+
+| 文件 | 改动 |
+|------|------|
+| `src/router/index.js` | `/index` → `@/views/dashboard/index` |
+| `src/views/dashboard/index.vue` | 重写为 Element Plus 系统看板 |
+| `src/store/modules/permission.js` | 路由路径自动补 `/`、子路由不加 `/` |
+| `src/views/eval/review/progress.vue` | 修复 `startReview` 命名冲突 |
+| `ruoyi-fastapi-frontend/.npmrc` | 配置国内镜像源 |
+
+**4. Docker 构建注意事项**
+```dockerfile
+FROM node:22-slim                            # 固定版本，不要用 current-slim
+ENV NODE_OPTIONS="--max-old-space-size=8192"  # 防 OOM
+RUN npm install --registry=https://registry.npmjs.org/
+```
+
+**5. 菜单是如何复原的**
+- 菜单数据在 `eval_init.sql` 中（已取消注释并修正）
+- **父菜单** `component=NULL`（不能用 `'layout'`）
+- **门户菜单**用 `type='M'` 目录 + 子菜单空路径（不能直接用 `type='C'`）
+- `sys_role_menu` 分配给管理员（`role_id=1`）

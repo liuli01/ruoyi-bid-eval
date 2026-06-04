@@ -1,14 +1,17 @@
-# 构建阶段
-FROM node:18-slim AS builder
+# 构建阶段（使用固定 LTS 版本，避免浮动标签导致缓存失效）
+FROM node:22-slim AS builder
 WORKDIR /app
 
 # 支持外部传入 VITE_APP_ENV
 ARG VITE_APP_ENV=docker
 ENV VITE_APP_ENV=$VITE_APP_ENV
 
+# 增加 Node.js 内存上限（Vite 构建大项目时需要）
+ENV NODE_OPTIONS="--max-old-space-size=8192"
+
 COPY . .
-RUN npm config set registry https://registry.npmmirror.com
-RUN npm install
+# 优先使用 npmmirror 镜像，如果包不存在则回退到官方源
+RUN npm install --registry=https://registry.npmjs.org/
 RUN npm run build:docker
 
 # 运行阶段

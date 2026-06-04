@@ -103,3 +103,67 @@ CREATE TABLE `eval_material` (
 -- eval:project:remove 删除项目
 -- eval:review:start   启动评审
 -- eval:review:query   查看评审
+
+-- ----------------------------
+-- 测试用户初始化（密码均为 admin123）
+-- ----------------------------
+INSERT INTO sys_user(user_id, dept_id, user_name, nick_name, user_type, email, phonenumber, sex, password, status, del_flag, create_by, create_time)
+VALUES
+(100, 103, 'waishi', '外事专员', '00', 'waishi@qq.com', '15888888888', '0', '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIrdAu2', '0', '0', 'admin', sysdate()),
+(101, 103, 'yiyi', '一事一议专员', '00', 'yiyi@qq.com', '15888888888', '0', '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIrdAu2', '0', '0', 'admin', sysdate()),
+(102, 103, 'reviewer', '评审专员', '00', 'reviewer@qq.com', '15888888888', '0', '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIrdAu2', '0', '0', 'admin', sysdate()),
+(103, 101, 'leader', '海外部领导', '00', 'leader@qq.com', '15888888888', '0', '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIrdAu2', '0', '0', 'admin', sysdate());
+
+-- 用户-角色关联
+INSERT IGNORE INTO sys_user_role(user_id, role_id) VALUES
+(100, 2),  -- waishi -> 普通角色
+(101, 2),  -- yiyi -> 普通角色
+(102, 2),  -- reviewer -> 普通角色
+(103, 1);  -- leader -> 管理员角色
+
+-- ----------------------------
+-- 菜单权限初始化
+-- ----------------------------
+-- 评审概览（在评审管理目录下）
+INSERT INTO sys_menu(menu_id, menu_name, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time)
+VALUES (2001, '评审概览', 2000, 0, 'dashboard', 'eval/dashboard', 0, 0, 'C', 0, 0, 'eval:dashboard', 'dashboard', 'admin', sysdate());
+
+-- 父菜单: 评审管理
+INSERT INTO sys_menu(menu_id, menu_name, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time)
+VALUES (2000, '评审管理', 0, 5, 'eval', NULL, 0, 0, 'M', 0, 0, '', 'validate', 'admin', sysdate());
+
+-- 子菜单
+INSERT INTO sys_menu(menu_id, menu_name, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time)
+VALUES
+(2002, '项目管理', 2000, 1, 'project', 'eval/project/index', 0, 0, 'C', 0, 0, 'eval:project:list', 'table', 'admin', sysdate()),
+(2005, '评审管理', 2000, 2, 'review', 'eval/review/index', 0, 0, 'C', 0, 0, 'eval:review:query', 'table', 'admin', sysdate()),
+(2007, '规则管理', 2000, 3, 'rules', 'eval/rules', 0, 0, 'C', 0, 0, 'eval:rules', 'list', 'admin', sysdate()),
+(2008, '系统设置', 2000, 4, 'settings', 'eval/settings', 0, 0, 'C', 0, 0, 'eval:settings', 'setting', 'admin', sysdate()),
+(2012, '审计追溯', 2000, 5, 'audit', 'eval/audit', 0, 0, 'C', 0, 0, 'eval:audit', 'date', 'admin', sysdate()),
+(2013, 'F3签报', 2000, 6, 'f3', 'eval/f3', 0, 0, 'C', 0, 0, 'eval:f3', 'upload', 'admin', sysdate()),
+(2014, '国别字典', 2000, 7, 'country', 'eval/country', 0, 0, 'C', 0, 0, 'eval:country', 's-platform', 'admin', sysdate());
+
+-- 按钮权限
+INSERT INTO sys_menu(menu_id, menu_name, parent_id, order_num, path, menu_type, visible, status, perms, create_by, create_time)
+VALUES
+(2003, '新增项目', 2002, 1, '', 'F', 0, 0, 'eval:project:add', 'admin', sysdate()),
+(2004, '删除项目', 2002, 2, '', 'F', 0, 0, 'eval:project:remove', 'admin', sysdate()),
+(2006, '启动评审', 2005, 1, '', 'F', 0, 0, 'eval:review:start', 'admin', sysdate());
+
+-- 一级门户菜单（目录类型，子菜单空路径保持URL不变）
+INSERT INTO sys_menu(menu_id, menu_name, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time)
+VALUES
+(2009, '风险会商', 0, 6, '/portal/consultation', NULL, 0, 0, 'M', 0, 0, '', 's-flag', 'admin', sysdate()),
+(2010, '项目立项', 0, 7, '/portal/approval', NULL, 0, 0, 'M', 0, 0, '', 's-marketing', 'admin', sysdate()),
+(2011, '一事一议', 0, 8, '/portal/yiyi', NULL, 0, 0, 'M', 0, 0, '', 's-check', 'admin', sysdate());
+
+-- 门户子菜单（空路径=URL不变）
+INSERT INTO sys_menu(menu_id, menu_name, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time)
+VALUES
+(2015, '风险会商', 2009, 1, '', 'eval/consultation', 0, 0, 'C', 0, 0, 'portal:consultation', 's-flag', 'admin', sysdate()),
+(2016, '项目立项', 2010, 1, '', 'eval/approval', 0, 0, 'C', 0, 0, 'portal:approval', 's-marketing', 'admin', sysdate()),
+(2017, '一事一议', 2011, 1, '', 'eval/yiyi', 0, 0, 'C', 0, 0, 'portal:yiyi', 's-check', 'admin', sysdate());
+
+-- 分配给管理员角色
+INSERT INTO sys_role_menu(role_id, menu_id)
+SELECT 1, menu_id FROM sys_menu WHERE menu_id >= 2000;
