@@ -33,9 +33,9 @@ for i in range(30):
             exit(1)
 "
 
-# 初始化数据库
+# 初始化数据库（使用 uv run 确保依赖可用）
 echo "🔄 初始化数据库..."
-python scripts/init_db.py
+uv run python scripts/init_db.py
 
 # 启动应用
 echo "🚀 启动应用..."
