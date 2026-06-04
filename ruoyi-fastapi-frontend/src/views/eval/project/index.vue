@@ -146,13 +146,20 @@
                   <el-tag :type="s.row.parseStatus === 'done' ? 'success' : 'danger'" size="small">{{ s.row.parseStatus }}</el-tag>
                 </template>
               </el-table-column>
-              <el-table-column label="操作" width="80">
+              <el-table-column label="操作" width="130">
                 <template #default="s">
+                  <el-button v-if="s.row.fileType==='pdf'||s.row.fileType==='txt'||s.row.fileType==='md'" type="text" icon="View" @click="previewMaterial(s.row)">预览</el-button>
                   <el-button type="text" icon="Download" @click="downloadMaterial(s.row)">下载</el-button>
                 </template>
               </el-table-column>
             </el-table>
           </el-tab-pane>
+
+    <!-- 文件预览弹窗 -->
+    <el-dialog title="文件预览" v-model="previewOpen" width="80%" top="5vh">
+      <iframe v-if="previewUrl" :src="previewUrl" style="width:100%;height:70vh;border:none"></iframe>
+      <el-empty v-else description="无法预览" />
+    </el-dialog>
 
           <el-tab-pane label="评审历史" name="reviews">
         <el-table :data="reviewHistory" v-loading="historyLoading" empty-text="暂无评审记录">
@@ -219,6 +226,7 @@ import { listProject, addProject, delProject, getProject } from '@/api/eval/proj
 import { startReview, getReview, getReviewOpinions, exportReview, getProjectReviews } from '@/api/eval/review'
 import { listMaterials, downloadMaterial as dm } from '@/api/eval/material'
 import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
 
 const { proxy } = getCurrentInstance()
 const router = useRouter()
@@ -233,6 +241,8 @@ const materialLoading = ref(false)
 const detailTab = ref('info')
 const loading = ref(true)
 const historyLoading = ref(false)
+const previewOpen = ref(false)
+const previewUrl = ref('')
 const opinionsLoading = ref(false)
 const showSearch = ref(true)
 const ids = ref([])
@@ -355,6 +365,16 @@ function handleUploadSuccess() {
   loadMaterials(currentProject.value.projectId)
 }
 
+async function previewMaterial(row) {
+  try {
+    const res = await dm(row.materialId)
+    const blob = new Blob([res], { type: row.fileType === 'pdf' ? 'application/pdf' : 'text/plain' })
+    previewUrl.value = URL.createObjectURL(blob)
+    previewOpen.value = true
+  } catch (e) {
+    ElMessage.error('预览失败')
+  }
+}
 function downloadMaterial(row) {
   dm(row.materialId).then(res => {
     const blob = new Blob([res])
