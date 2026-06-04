@@ -52,5 +52,5 @@ export default {
   /**
    * 底部版权文本内容
    */
-  footerContent: 'Copyright © 2024-2026 insistence.tech All Rights Reserved.'
+  footerContent: '海外项目投标评审系统 © 2026'
 }
